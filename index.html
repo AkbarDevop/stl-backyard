@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>STL Backyard | Free and Affordable St. Louis Events</title>
+    <meta
+      name="description"
+      content="A civic-style starter map for free and affordable summer events across St. Louis."
+    >
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header" aria-label="STL Backyard navigation">
+      <a class="brand" href="#top" aria-label="STL Backyard home">
+        <span class="brand-mark">STL</span>
+        <span>Backyard</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#events">Events</a>
+        <a href="#map">Map</a>
+        <a href="#submit">Submit</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-media" aria-hidden="true"></div>
+        <div class="hero-overlay" aria-hidden="true"></div>
+        <div class="hero-content">
+          <p class="eyebrow">Starter civic events map</p>
+          <h1 id="hero-title">St. Louis, no excuse to be bored this summer.</h1>
+          <p class="hero-subtitle">
+            Free and affordable music, arts, movies, sports, festivals, museums,
+            food hangs, and community events across the city.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#events">Find a plan</a>
+            <a class="button secondary" href="#submit">Submit an event</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="notice-band" aria-label="Data note">
+        <p>
+          Starter/demo listings. Source links are included, but times, prices,
+          weather plans, and ticket rules should be verified before you go.
+        </p>
+      </section>
+
+      <section class="filters-section" id="events" aria-labelledby="filters-title">
+        <div class="section-heading">
+          <p class="eyebrow">Search the backyard</p>
+          <h2 id="filters-title">What sounds good?</h2>
+        </div>
+
+        <form class="filters" id="filters" aria-label="Event filters">
+          <label class="field search-field">
+            <span>Search</span>
+            <input
+              id="search"
+              name="search"
+              type="search"
+              placeholder="jazz, Forest Park, movies..."
+              autocomplete="off"
+            >
+          </label>
+
+          <label class="field">
+            <span>Category</span>
+            <select id="category" name="category">
+              <option value="all">All categories</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Price</span>
+            <select id="price" name="price">
+              <option value="all">Any price</option>
+              <option value="free">Free options</option>
+              <option value="under15">Starts under $15</option>
+              <option value="paid">Ticketed</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Neighborhood</span>
+            <select id="neighborhood" name="neighborhood">
+              <option value="all">All neighborhoods</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Date</span>
+            <select id="date-filter" name="date-filter">
+              <option value="all">All summer</option>
+              <option value="today">Today</option>
+              <option value="this-week">This week</option>
+              <option value="weekend">Weekend</option>
+              <option value="june">June</option>
+              <option value="july">July</option>
+              <option value="august">August</option>
+            </select>
+          </label>
+
+          <button class="button reset" type="button" id="reset-filters">Reset</button>
+        </form>
+
+        <div class="tag-filter" id="tag-filter" aria-label="Good-for tags"></div>
+      </section>
+
+      <section class="map-section" id="map" aria-labelledby="map-title">
+        <div class="section-heading">
+          <p class="eyebrow">No API keys, just vibes</p>
+          <h2 id="map-title">Neighborhood pinboard</h2>
+        </div>
+        <div class="map-layout">
+          <div class="stl-map" id="stl-map" aria-label="Stylized St. Louis neighborhood map"></div>
+          <aside class="map-panel" aria-label="Neighborhood summary">
+            <p class="mini-label">Pinned areas</p>
+            <div id="map-summary" class="map-summary"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="results-section" aria-labelledby="results-title">
+        <div class="results-bar">
+          <div>
+            <p class="eyebrow">Live list</p>
+            <h2 id="results-title">Matching events</h2>
+          </div>
+          <p class="result-count" id="result-count">Loading events...</p>
+        </div>
+        <div class="event-grid" id="event-list"></div>
+        <p class="empty-state" id="empty-state" hidden>
+          No matches yet. Try removing a filter or checking a nearby neighborhood.
+        </p>
+      </section>
+
+      <section class="curated-section" aria-label="Curated picks">
+        <div class="section-heading">
+          <p class="eyebrow">Quick picks</p>
+          <h2>Four easy ways out</h2>
+        </div>
+        <div class="curated-grid">
+          <section class="curated-list" aria-labelledby="week-title">
+            <h3 id="week-title">This week</h3>
+            <div id="this-week-list"></div>
+          </section>
+          <section class="curated-list" aria-labelledby="free-title">
+            <h3 id="free-title">Free picks</h3>
+            <div id="free-list"></div>
+          </section>
+          <section class="curated-list" aria-labelledby="cheap-title">
+            <h3 id="cheap-title">Under $15</h3>
+            <div id="cheap-list"></div>
+          </section>
+          <section class="curated-list" aria-labelledby="hidden-title">
+            <h3 id="hidden-title">Hidden gems</h3>
+            <div id="hidden-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="submit-section" id="submit" aria-labelledby="submit-title">
+        <div>
+          <p class="eyebrow">Know a cheap good thing?</p>
+          <h2 id="submit-title">Send it to STL Backyard.</h2>
+          <p>
+            Include the event name, date, price, neighborhood, official link,
+            and one sentence on why it belongs here.
+          </p>
+        </div>
+        <a
+          class="button primary"
+          href="mailto:hello@stlbackyard.example?subject=STL%20Backyard%20event%20submission"
+        >Submit by email</a>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>STL Backyard is an original static starter site. Verify event details before heading out.</p>
+      <a href="#top">Back to top</a>
+    </footer>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
