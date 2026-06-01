@@ -264,6 +264,10 @@ h3 {
   background: transparent;
 }
 
+.quick-jump {
+  display: none;
+}
+
 .notice-band {
   padding: 14px 28px;
   color: var(--white);
@@ -278,6 +282,7 @@ h3 {
   font-weight: 850;
 }
 
+.quick-jump,
 .planner-section,
 .filters-section,
 .map-section,
@@ -2295,6 +2300,237 @@ body.onboarding-open {
     box-shadow: 4px 4px 0 var(--ink);
     font-weight: 950;
     text-decoration: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .site-header {
+    align-items: center;
+    min-height: 58px;
+  }
+
+  .nav-links a[href="#events"],
+  .nav-links a[href="#submit"] {
+    display: none;
+  }
+
+  .quick-jump {
+    position: sticky;
+    top: 58px;
+    z-index: 24;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(247, 239, 225, 0.96);
+    border-bottom: 1px solid rgba(24, 33, 31, 0.12);
+    backdrop-filter: blur(12px);
+  }
+
+  .quick-jump a {
+    display: grid;
+    place-items: center;
+    min-height: 38px;
+    color: var(--ink);
+    background: var(--paper-strong);
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 950;
+    text-decoration: none;
+  }
+
+  .hero {
+    min-height: auto;
+  }
+
+  .hero-content {
+    padding-top: 46px;
+    padding-bottom: 42px;
+  }
+
+  h1 {
+    font-size: clamp(2.15rem, 11vw, 2.7rem);
+  }
+
+  .hero-subtitle {
+    max-width: 34ch;
+    margin-top: 14px;
+  }
+
+  .hero-actions {
+    display: grid;
+  }
+
+  .notice-band {
+    padding: 10px 14px;
+    font-size: 0.86rem;
+  }
+
+  .planner-section,
+  .filters-section,
+  .results-section,
+  .map-section,
+  .saved-section,
+  .submit-section {
+    padding-top: 34px;
+  }
+
+  .section-heading,
+  .planner-intro,
+  .results-bar {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .section-note {
+    max-width: none;
+    font-size: 0.92rem;
+  }
+
+  .planner-preview {
+    display: none;
+  }
+
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .filters .search-field,
+  .filters .reset {
+    grid-column: 1 / -1;
+  }
+
+  .field span {
+    font-size: 0.72rem;
+  }
+
+  .field input,
+  .field select {
+    min-height: 42px;
+    padding: 8px 9px;
+  }
+
+  .tag-filter,
+  .neighborhood-guide {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scroll-snap-type: x proximity;
+  }
+
+  .tag-button,
+  .neighborhood-chip {
+    flex: 0 0 auto;
+    max-width: 220px;
+    scroll-snap-align: start;
+  }
+
+  .neighborhood-chip span,
+  .neighborhood-chip small {
+    display: none;
+  }
+
+  .event-grid {
+    gap: 12px;
+  }
+
+  .event-card {
+    gap: 10px;
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .event-media {
+    min-height: 138px;
+  }
+
+  .event-card .event-desc,
+  .event-card .good-tags {
+    display: none;
+  }
+
+  .event-card h3 {
+    font-size: 1.08rem;
+    line-height: 1.1;
+  }
+
+  .meta-row {
+    gap: 6px;
+    font-size: 0.86rem;
+  }
+
+  .card-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card-actions a,
+  .card-actions button {
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px;
+    text-align: center;
+  }
+
+  .card-actions .copy-button {
+    display: none;
+  }
+
+  .trust-panel summary {
+    min-height: 38px;
+  }
+
+  .stl-map {
+    min-height: 310px;
+    border-radius: 12px;
+  }
+
+  .map-panel {
+    padding: 12px;
+  }
+
+  .map-summary {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .saved-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .local-tips {
+    display: none;
+  }
+
+  .saved-panel {
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .saved-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .curated-section,
+  .verify-section {
+    display: none;
+  }
+
+  .submit-section {
+    margin-top: 34px;
+    margin-bottom: 34px;
+  }
+
+  .sticky-plan-cta {
+    left: 16px;
+    right: 16px;
+    min-height: 52px;
+    border-radius: 999px;
   }
 }
 

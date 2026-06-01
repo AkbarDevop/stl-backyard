@@ -50,10 +50,15 @@
         </div>
       </section>
 
+      <nav class="quick-jump" aria-label="Quick actions">
+        <a href="#results">See picks</a>
+        <a href="#map">Map</a>
+        <a href="#saved">Saved</a>
+      </nav>
+
       <section class="notice-band" aria-label="Data note">
         <p>
-          Starter data, source links included. Check times, prices, weather plans,
-          and ticket rules before you head out.
+          Source-linked starter data. check the official listing before you go.
         </p>
       </section>
 
@@ -98,7 +103,7 @@
             <h2 id="filters-title">Search the backyard.</h2>
           </div>
           <p class="section-note">
-            The chooser comes first; this directory is here when you want the full list.
+            Start broad, then narrow only if you need to.
           </p>
         </div>
 
@@ -163,25 +168,6 @@
         <div class="neighborhood-guide" id="neighborhood-guide" aria-label="Neighborhood guide"></div>
       </section>
 
-      <section class="map-section" id="map" aria-labelledby="map-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">River-to-park pinboard</p>
-            <h2 id="map-title">A civic map, STL style.</h2>
-          </div>
-          <p class="section-note">
-            Real OpenStreetMap tiles, STL neighborhood pins, and filtered picks that move with the list.
-          </p>
-        </div>
-        <div class="map-layout">
-          <div class="stl-map" id="stl-map" aria-label="Stylized St. Louis neighborhood map"></div>
-          <aside class="map-panel" aria-label="Neighborhood summary">
-            <p class="mini-label">Pinned areas</p>
-            <div id="map-summary" class="map-summary"></div>
-          </aside>
-        </div>
-      </section>
-
       <section class="results-section" id="results" aria-labelledby="results-title">
         <div class="results-bar">
           <div>
@@ -194,6 +180,25 @@
         <p class="empty-state" id="empty-state" hidden>
           No matches yet. Try removing a filter or checking a nearby neighborhood.
         </p>
+      </section>
+
+      <section class="map-section" id="map" aria-labelledby="map-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">River-to-park pinboard</p>
+            <h2 id="map-title">A civic map, STL style.</h2>
+          </div>
+          <p class="section-note">
+            Pins move with your current filters.
+          </p>
+        </div>
+        <div class="map-layout">
+          <div class="stl-map" id="stl-map" aria-label="Stylized St. Louis neighborhood map"></div>
+          <aside class="map-panel" aria-label="Neighborhood summary">
+            <p class="mini-label">Pinned areas</p>
+            <div id="map-summary" class="map-summary"></div>
+          </aside>
+        </div>
       </section>
 
       <section class="saved-section" id="saved" aria-labelledby="saved-title">
