@@ -24,6 +24,7 @@
         <a href="#plan">Plan</a>
         <a href="#events">Directory</a>
         <a href="#map">Map</a>
+        <a href="#saved">Saved</a>
         <a href="#submit">Submit</a>
       </nav>
     </header>
@@ -159,6 +160,7 @@
         </div>
 
         <div class="tag-filter" id="tag-filter" aria-label="Good-for tags"></div>
+        <div class="neighborhood-guide" id="neighborhood-guide" aria-label="Neighborhood guide"></div>
       </section>
 
       <section class="map-section" id="map" aria-labelledby="map-title">
@@ -192,6 +194,32 @@
         <p class="empty-state" id="empty-state" hidden>
           No matches yet. Try removing a filter or checking a nearby neighborhood.
         </p>
+      </section>
+
+      <section class="saved-section" id="saved" aria-labelledby="saved-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Saved day</p>
+            <h2 id="saved-title">Keep a short list.</h2>
+          </div>
+          <p class="section-note" id="saved-count">No saved picks yet</p>
+        </div>
+        <div class="saved-layout">
+          <div class="saved-panel" aria-live="polite">
+            <div class="saved-list" id="saved-list"></div>
+            <p class="saved-empty" id="saved-empty">No saved picks yet. Add a few from the live list.</p>
+            <div class="saved-actions">
+              <button class="button secondary" type="button" id="copy-saved">Copy saved day</button>
+              <button class="button ghost" type="button" id="clear-saved">Clear saved</button>
+            </div>
+            <p class="share-status saved-status" id="saved-status" role="status" aria-live="polite"></p>
+          </div>
+          <aside class="local-tips" aria-labelledby="local-tips-title">
+            <p class="mini-label">Local tips</p>
+            <h3 id="local-tips-title">From the current picks</h3>
+            <div id="local-tips-list"></div>
+          </aside>
+        </div>
       </section>
 
       <section class="curated-section" aria-label="Curated picks">

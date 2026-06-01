@@ -7,6 +7,7 @@ const DEFAULT_PLAN = {
 
 const PLAN_STORAGE_KEY = "stl-backyard-plan";
 const IMAGE_CACHE_KEY = "stl-backyard-image-cache-v1";
+const SAVED_EVENTS_KEY = "stl-backyard-saved-events-v1";
 const plannerSteps = ["group", "budget", "vibe", "area", "results"];
 const plannerStepLabels = {
   group: "Step 1 of 5",
@@ -26,7 +27,9 @@ const state = {
   currentPlannerStep: 0,
   plannerReturnFocus: null,
   map: null,
-  markerLayer: null
+  markerLayer: null,
+  savedEventIds: new Set(),
+  imageHydrating: false
 };
 
 const els = {
@@ -54,6 +57,7 @@ const els = {
   dateFilter: document.querySelector("#date-filter"),
   reset: document.querySelector("#reset-filters"),
   tagFilter: document.querySelector("#tag-filter"),
+  neighborhoodGuide: document.querySelector("#neighborhood-guide"),
   eventList: document.querySelector("#event-list"),
   resultCount: document.querySelector("#result-count"),
   emptyState: document.querySelector("#empty-state"),
@@ -63,6 +67,13 @@ const els = {
   free: document.querySelector("#free-list"),
   cheap: document.querySelector("#cheap-list"),
   hidden: document.querySelector("#hidden-list"),
+  savedList: document.querySelector("#saved-list"),
+  savedEmpty: document.querySelector("#saved-empty"),
+  savedCount: document.querySelector("#saved-count"),
+  copySaved: document.querySelector("#copy-saved"),
+  clearSaved: document.querySelector("#clear-saved"),
+  savedStatus: document.querySelector("#saved-status"),
+  localTipsList: document.querySelector("#local-tips-list"),
   closePlanner: document.querySelector("#close-planner"),
   openPlannerLinks: document.querySelectorAll("[data-open-planner]")
 };
@@ -206,14 +217,23 @@ async function init() {
     }
     const data = await response.json();
     state.events = data.events.map(normalizeEvent);
+    state.imageHydrating = state.events.some((event) => !event.image?.url);
     buildFilters();
     buildMap();
     loadSavedPlan();
+    loadSavedEvents();
     bindEvents();
     updatePlan();
     renderPlannerStep();
     applyFilters();
-    hydrateEventImages().catch((error) => console.warn("Image hydration skipped", error));
+    hydrateEventImages()
+      .catch((error) => console.warn("Image hydration skipped", error))
+      .finally(() => {
+        if (!state.imageHydrating) return;
+        state.imageHydrating = false;
+        updatePlan();
+        applyFilters();
+      });
   } catch (error) {
     els.resultCount.textContent = "Could not load event data.";
     els.emptyState.hidden = false;
@@ -321,7 +341,14 @@ function writeImageCache(cache) {
 
 function getImageMarkup(event, className = "event-media") {
   if (!event.image?.url) {
-    return `<div class="${className} image-fallback"><span>${escapeHtml(categoryLabels[event.category] || "STL")}</span></div>`;
+    const loadingClass = state.imageHydrating ? " image-loading" : "";
+    const loadingText = state.imageHydrating ? "<small>Looking up source image</small>" : "";
+    return `
+      <div class="${className} image-fallback${loadingClass}">
+        <span>${escapeHtml(categoryLabels[event.category] || "STL")}</span>
+        ${loadingText}
+      </div>
+    `;
   }
 
   return `
@@ -441,6 +468,8 @@ function bindEvents() {
     state.activePlanFilter = null;
     applyFilters();
   });
+  els.copySaved.addEventListener("click", copySavedDay);
+  els.clearSaved.addEventListener("click", clearSavedEvents);
 
   els.tagFilter.addEventListener("click", (event) => {
     const button = event.target.closest(".tag-button");
@@ -456,6 +485,12 @@ function bindEvents() {
     applyFilters();
   });
 
+  els.neighborhoodGuide.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-neighborhood]");
+    if (!button) return;
+    setNeighborhood(button.dataset.neighborhood, { scrollTarget: "#results" });
+  });
+
   els.map.addEventListener("click", (event) => {
     const pin = event.target.closest(".pin, [data-map-neighborhood]");
     if (!pin) return;
@@ -469,6 +504,18 @@ function bindEvents() {
   });
 
   document.addEventListener("click", (event) => {
+    const saveButton = event.target.closest("[data-save-event]");
+    if (saveButton) {
+      toggleSavedEvent(saveButton.dataset.saveEvent);
+      return;
+    }
+
+    const mapButton = event.target.closest("[data-map-event-neighborhood]");
+    if (mapButton) {
+      setNeighborhood(mapButton.dataset.mapEventNeighborhood, { scrollTarget: "#map" });
+      return;
+    }
+
     const mini = event.target.closest("[data-focus-event]");
     if (!mini) return;
     if (document.body.classList.contains("onboarding-open")) {
@@ -576,6 +623,26 @@ function savePlanPreferences() {
     localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(getPlanPreferences()));
   } catch {
     // Storage is optional; the planner still works without it.
+  }
+}
+
+function loadSavedEvents() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SAVED_EVENTS_KEY) || "[]");
+    if (!Array.isArray(saved)) return;
+    const validIds = new Set(state.events.map((event) => event.id));
+    state.savedEventIds = new Set(saved.filter((id) => validIds.has(id)));
+  } catch {
+    localStorage.removeItem(SAVED_EVENTS_KEY);
+    state.savedEventIds = new Set();
+  }
+}
+
+function saveSavedEvents() {
+  try {
+    localStorage.setItem(SAVED_EVENTS_KEY, JSON.stringify([...state.savedEventIds]));
+  } catch {
+    // Saved picks are optional browser state.
   }
 }
 
@@ -863,6 +930,8 @@ function applyFilters() {
   renderCuratedSections();
   renderPins();
   renderMapSummary();
+  renderNeighborhoodGuide();
+  renderSavedDay();
 }
 
 function matchesAppliedPlan(event) {
@@ -968,6 +1037,7 @@ function createEventCard(event) {
   const article = document.createElement("article");
   article.className = `event-card${event.featured ? " featured" : ""}`;
   article.id = `event-${event.id}`;
+  const isSaved = state.savedEventIds.has(event.id);
 
   article.innerHTML = `
     ${getImageMarkup(event)}
@@ -1005,9 +1075,31 @@ function createEventCard(event) {
     </div>
     <div class="card-actions">
       <a href="${escapeAttribute(event.link)}" target="_blank" rel="noreferrer">Official/source</a>
+      <button class="save-button" type="button" data-save-event="${escapeAttribute(event.id)}" aria-pressed="${String(isSaved)}" aria-label="${escapeAttribute(isSaved ? `Remove ${event.title} from saved day` : `Save ${event.title} to saved day`)}">${isSaved ? "Saved" : "Save"}</button>
+      <button class="map-area-button" type="button" data-map-event-neighborhood="${escapeAttribute(event.neighborhood)}">Map area</button>
       <button class="copy-button" type="button" data-copy="${escapeAttribute(event.id)}" aria-label="Copy ${escapeAttribute(event.title)} blurb">Copy blurb</button>
     </div>
-    <p class="source-row">Source: <a href="${escapeAttribute(event.sourceUrl)}" target="_blank" rel="noreferrer">${escapeHtml(event.sourceName)}</a></p>
+    <details class="trust-panel">
+      <summary>Source and checks</summary>
+      <dl>
+        <div>
+          <dt>Source</dt>
+          <dd><a href="${escapeAttribute(event.sourceUrl)}" target="_blank" rel="noreferrer">${escapeHtml(event.sourceName)}</a></dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd>${escapeHtml(getStatusDetail(event))}</dd>
+        </div>
+        <div>
+          <dt>Price</dt>
+          <dd>${escapeHtml(getPriceDetail(event))}</dd>
+        </div>
+        <div>
+          <dt>Before you go</dt>
+          <dd>${escapeHtml(getBeforeGoNote(event))}</dd>
+        </div>
+      </dl>
+    </details>
   `;
 
   article.querySelector(".copy-button").addEventListener("click", async (clickEvent) => {
@@ -1029,6 +1121,157 @@ function createEventCard(event) {
   });
 
   return article;
+}
+
+function getStatusDetail(event) {
+  if (event.status === "source-confirmed") {
+    return "Main listing details are linked to the named source.";
+  }
+  return "Starter listing: verify date, time, price, tickets, and weather plan.";
+}
+
+function getPriceDetail(event) {
+  if (event.priceMin === 0 && event.priceMax === 0) return "Listed as free in the starter data.";
+  if (event.priceMin === 0) return `Starter data includes free access and paid options up to about $${event.priceMax}. ${event.priceLabel}.`;
+  if (event.priceMax > event.priceMin) return `Starter range is about $${event.priceMin}-$${event.priceMax}. ${event.priceLabel}.`;
+  return `Starter price: ${event.priceLabel}.`;
+}
+
+function getBeforeGoNote(event) {
+  const tags = new Set(event.goodFor || []);
+  if (event.category === "outdoors" || tags.has("outdoors") || tags.has("picnic")) {
+    return "Check rain, heat, seating, and carry-in rules.";
+  }
+  if (tags.has("rainy day") || event.category === "museums") {
+    return "Check hours, reservations, and any special exhibit rules.";
+  }
+  if (tags.has("transit-friendly")) {
+    return "Check entry timing and transit or parking before leaving.";
+  }
+  if (event.hiddenGem || tags.has("hidden gem")) {
+    return "Small programs can shift; confirm the live listing.";
+  }
+  return "Confirm date, time, capacity, tickets, and accessibility details.";
+}
+
+function toggleSavedEvent(id) {
+  const event = state.events.find((item) => item.id === id);
+  if (!event) return;
+
+  if (state.savedEventIds.has(id)) {
+    state.savedEventIds.delete(id);
+  } else {
+    state.savedEventIds.add(id);
+  }
+
+  clearSavedStatus();
+  saveSavedEvents();
+  renderSavedDay();
+  renderEvents(state.filteredEvents);
+}
+
+function clearSavedEvents() {
+  if (state.savedEventIds.size === 0) return;
+  state.savedEventIds.clear();
+  saveSavedEvents();
+  clearSavedStatus();
+  renderSavedDay();
+  renderEvents(state.filteredEvents);
+}
+
+async function copySavedDay() {
+  const saved = getSavedEvents();
+  if (saved.length === 0) {
+    els.savedStatus.textContent = "Nothing saved yet.";
+    return;
+  }
+
+  try {
+    await copyText(getSavedShareText(saved));
+    els.savedStatus.textContent = "Saved day copied.";
+  } catch {
+    els.savedStatus.textContent = "Copy failed.";
+  }
+}
+
+function getSavedShareText(saved = getSavedEvents()) {
+  const picks = saved
+    .map((event, index) => {
+      return `${index + 1}. ${event.title} - ${formatDateRange(event)}, ${event.time} at ${event.venue} (${event.neighborhood}). ${event.priceLabel}. Source: ${event.sourceName} ${event.sourceUrl}`;
+    })
+    .join("\n");
+
+  return `STL Backyard saved day\n${picks}\n\nVerify details before you go.`;
+}
+
+function renderSavedDay() {
+  const saved = getSavedEvents();
+  els.savedList.innerHTML = "";
+  els.savedEmpty.hidden = saved.length !== 0;
+  els.savedCount.textContent = saved.length === 0
+    ? "No saved picks yet"
+    : `${saved.length} saved ${saved.length === 1 ? "pick" : "picks"}`;
+  els.copySaved.disabled = saved.length === 0;
+  els.clearSaved.disabled = saved.length === 0;
+
+  const fragment = document.createDocumentFragment();
+  saved.forEach((event) => {
+    const item = document.createElement("article");
+    item.className = "saved-item";
+    item.innerHTML = `
+      <div>
+        <button type="button" data-focus-event="${escapeAttribute(event.id)}">${escapeHtml(event.title)}</button>
+        <span>${formatDateRange(event)} / ${escapeHtml(event.neighborhood)} / ${escapeHtml(event.priceLabel)}</span>
+        <small>${escapeHtml(getLocalTip(event))}</small>
+      </div>
+      <button class="saved-remove" type="button" data-save-event="${escapeAttribute(event.id)}" aria-label="Remove ${escapeAttribute(event.title)}">Remove</button>
+    `;
+    fragment.append(item);
+  });
+  els.savedList.append(fragment);
+  renderLocalTips(saved.length ? saved : state.filteredEvents.slice(0, 6));
+}
+
+function renderLocalTips(events) {
+  els.localTipsList.innerHTML = "";
+  const tips = unique(events.map(getLocalTip)).slice(0, 4);
+
+  if (tips.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "event-desc";
+    empty.textContent = "Filter the directory to surface local notes.";
+    els.localTipsList.append(empty);
+    return;
+  }
+
+  const list = document.createElement("ul");
+  list.className = "tips-list";
+  tips.forEach((tip) => {
+    const item = document.createElement("li");
+    item.textContent = tip;
+    list.append(item);
+  });
+  els.localTipsList.append(list);
+}
+
+function getSavedEvents() {
+  return state.events
+    .filter((event) => state.savedEventIds.has(event.id))
+    .sort((a, b) => a.start - b.start || a.title.localeCompare(b.title));
+}
+
+function getLocalTip(event) {
+  const tags = new Set(event.goodFor || []);
+  if (tags.has("transit-friendly")) return `${event.neighborhood}: transit-friendly tag, but confirm arrival timing.`;
+  if (event.priceMin === 0 && event.priceMax === 0) return `${event.neighborhood}: no-admission pick; still check registration or capacity.`;
+  if (event.category === "outdoors" || tags.has("outdoors")) return `${event.neighborhood}: outdoor pick, so check shade, heat, and rain plans.`;
+  if (tags.has("rainy day") || event.category === "museums") return `${event.neighborhood}: useful weather backup; confirm hours before heading over.`;
+  if (event.hiddenGem || tags.has("hidden gem")) return `${event.neighborhood}: hidden-gem listing; verify the exact schedule.`;
+  return `${event.neighborhood}: ${categoryLabels[event.category] || toTitle(event.category)} pick with source details to verify.`;
+}
+
+function clearSavedStatus() {
+  els.savedStatus.textContent = "";
 }
 
 function renderCuratedSections() {
@@ -1194,12 +1437,60 @@ function renderMapSummary() {
   });
 }
 
-function setNeighborhood(neighborhood) {
+function renderNeighborhoodGuide() {
+  els.neighborhoodGuide.innerHTML = "";
+  const grouped = groupBy(state.filteredEvents, (event) => event.neighborhood);
+  const rows = Object.entries(grouped)
+    .map(([neighborhood, events]) => ({
+      neighborhood,
+      events,
+      count: events.length,
+      freeCount: events.filter((event) => event.priceMin === 0).length,
+      confirmedCount: events.filter((event) => event.status === "source-confirmed").length,
+      category: getTopValue(events.map((event) => event.category))
+    }))
+    .sort((a, b) => b.count - a.count || b.freeCount - a.freeCount || a.neighborhood.localeCompare(b.neighborhood))
+    .slice(0, 6);
+
+  if (rows.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "neighborhood-empty";
+    empty.textContent = "No neighborhood guide for these filters.";
+    els.neighborhoodGuide.append(empty);
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  rows.forEach((row) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "neighborhood-chip";
+    button.dataset.neighborhood = row.neighborhood;
+    button.setAttribute("aria-pressed", String(state.activeNeighborhood === row.neighborhood));
+    button.innerHTML = `
+      <strong>${escapeHtml(row.neighborhood)}</strong>
+      <span>${row.count} ${row.count === 1 ? "pick" : "picks"} / ${escapeHtml(getNeighborhoodGuideLine(row))}</span>
+      <small>${row.confirmedCount} source-linked / ${row.freeCount} free-first</small>
+    `;
+    fragment.append(button);
+  });
+  els.neighborhoodGuide.append(fragment);
+}
+
+function getNeighborhoodGuideLine(row) {
+  const category = categoryLabels[row.category] || toTitle(row.category || "local");
+  if (row.events.some((event) => event.hiddenGem)) return `${category} plus hidden gems`;
+  if (row.freeCount === row.count) return `${category} with no admission first`;
+  if (row.freeCount > 0) return `${category} with free options`;
+  return `${category} cluster`;
+}
+
+function setNeighborhood(neighborhood, { scrollTarget = "#events" } = {}) {
   els.neighborhood.value = neighborhood;
   state.activeNeighborhood = neighborhood;
   state.activePlanFilter = null;
   applyFilters();
-  document.querySelector("#events").scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelector(scrollTarget)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function focusEvent(id) {
@@ -1283,6 +1574,21 @@ function countBy(items, getKey) {
     counts[key] = (counts[key] || 0) + 1;
     return counts;
   }, {});
+}
+
+function groupBy(items, getKey) {
+  return items.reduce((groups, item) => {
+    const key = getKey(item);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+    return groups;
+  }, {});
+}
+
+function getTopValue(values) {
+  const counts = countBy(values, (value) => value);
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0];
 }
 
 function toTitle(value) {
