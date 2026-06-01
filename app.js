@@ -6,6 +6,7 @@ const DEFAULT_PLAN = {
 };
 
 const PLAN_STORAGE_KEY = "stl-backyard-plan";
+const IMAGE_CACHE_KEY = "stl-backyard-image-cache-v1";
 const plannerSteps = ["group", "budget", "vibe", "area", "results"];
 const plannerStepLabels = {
   group: "Step 1 of 5",
@@ -184,6 +185,17 @@ const neighborhoodCoordinates = {
 
 const stlMapCenter = [38.627, -90.255];
 
+const categoryImageQueries = {
+  music: "St. Louis live music",
+  outdoors: "Forest Park St. Louis",
+  museums: "Saint Louis Art Museum",
+  movies: "St. Louis outdoor movie",
+  sports: "Busch Stadium St. Louis",
+  food: "Soulard Market St. Louis",
+  arts: "Grand Center Arts District St. Louis",
+  community: "St. Louis neighborhood festival"
+};
+
 init();
 
 async function init() {
@@ -201,6 +213,7 @@ async function init() {
     updatePlan();
     renderPlannerStep();
     applyFilters();
+    hydrateEventImages().catch((error) => console.warn("Image hydration skipped", error));
   } catch (error) {
     els.resultCount.textContent = "Could not load event data.";
     els.emptyState.hidden = false;
@@ -213,6 +226,8 @@ async function init() {
 function normalizeEvent(event) {
   return {
     ...event,
+    imageQuery: event.imageQuery || `${event.venue} ${event.neighborhood} St. Louis`,
+    image: event.imageUrl ? { url: event.imageUrl, source: event.imageSource || "Event source" } : null,
     start: parseLocalDate(event.startDate),
     end: parseLocalDate(event.endDate || event.startDate),
     searchable: [
@@ -227,6 +242,94 @@ function normalizeEvent(event) {
       .join(" ")
       .toLowerCase()
   };
+}
+
+async function hydrateEventImages() {
+  const cache = readImageCache();
+  const missing = state.events.filter((event) => !event.image?.url);
+
+  for (const event of missing) {
+    const queries = unique([
+      event.imageQuery,
+      `${event.venue} St. Louis`,
+      `${event.neighborhood} St. Louis`,
+      categoryImageQueries[event.category]
+    ].filter(Boolean));
+
+    for (const query of queries) {
+      const cached = cache[query];
+      if (cached) {
+        event.image = cached;
+        break;
+      }
+      if (cached === null) continue;
+
+      const image = await fetchWikimediaImage(query);
+      cache[query] = image;
+      writeImageCache(cache);
+      if (image) {
+        event.image = image;
+        break;
+      }
+    }
+  }
+
+  updatePlan();
+  applyFilters();
+}
+
+async function fetchWikimediaImage(query) {
+  const params = new URLSearchParams({
+    action: "query",
+    origin: "*",
+    format: "json",
+    generator: "search",
+    gsrsearch: query,
+    gsrlimit: "1",
+    prop: "pageimages",
+    piprop: "thumbnail|name|original",
+    pithumbsize: "760"
+  });
+  const response = await fetch(`https://en.wikipedia.org/w/api.php?${params.toString()}`);
+  if (!response.ok) return null;
+  const data = await response.json();
+  const page = Object.values(data.query?.pages || {})[0];
+  const source = page?.thumbnail?.source || page?.original?.source;
+  if (!source) return null;
+  return {
+    url: source,
+    source: `Wikimedia / ${page.title || query}`
+  };
+}
+
+function readImageCache() {
+  try {
+    return JSON.parse(localStorage.getItem(IMAGE_CACHE_KEY) || "{}");
+  } catch {
+    localStorage.removeItem(IMAGE_CACHE_KEY);
+    return {};
+  }
+}
+
+function writeImageCache(cache) {
+  try {
+    localStorage.setItem(IMAGE_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // Image cache is nice-to-have only.
+  }
+}
+
+function getImageMarkup(event, className = "event-media") {
+  if (!event.image?.url) {
+    return `<div class="${className} image-fallback"><span>${escapeHtml(categoryLabels[event.category] || "STL")}</span></div>`;
+  }
+
+  return `
+    <figure class="${className}">
+      <img src="${escapeAttribute(event.image.url)}" alt="${escapeAttribute(`${event.venue} in ${event.neighborhood}`)}" loading="lazy">
+      <figcaption>${escapeHtml(event.image.source)}</figcaption>
+    </figure>
+  `;
 }
 
 function buildFilters() {
@@ -629,6 +732,7 @@ function renderPlanPicks(picks) {
     const item = document.createElement("article");
     item.className = "plan-pick";
     item.innerHTML = `
+      ${getImageMarkup(event, "plan-pick-thumb")}
       <div class="plan-pick-number">${index + 1}</div>
       <div class="plan-pick-body">
         <button type="button" data-focus-event="${escapeAttribute(event.id)}">${escapeHtml(event.title)}</button>
@@ -866,6 +970,7 @@ function createEventCard(event) {
   article.id = `event-${event.id}`;
 
   article.innerHTML = `
+    ${getImageMarkup(event)}
     <div class="card-topline">
       <div class="date-badge">
         <span>${formatMonth(event.start)}</span>
@@ -1049,8 +1154,10 @@ function renderMapPopup(neighborhood, count) {
     .map((event) => `<li><button type="button" data-focus-event="${escapeAttribute(event.id)}">${escapeHtml(event.title)}</button></li>`)
     .join("");
 
+  const cover = picks[0] ? getImageMarkup(picks[0], "map-popup-image") : "";
   return `
     <div class="map-popup-card">
+      ${cover}
       <p>${escapeHtml(neighborhood)} / ${count} ${count === 1 ? "pick" : "picks"}</p>
       <ul>${items}</ul>
       <button type="button" class="map-popup-filter" data-map-neighborhood="${escapeAttribute(neighborhood)}">
