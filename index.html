@@ -6,7 +6,7 @@
     <title>STL Backyard | Free and Affordable St. Louis Events</title>
     <meta
       name="description"
-      content="A civic-style starter map for free and affordable summer events across St. Louis."
+      content="A playful civic guide to free and affordable summer events across St. Louis."
     >
     <link rel="stylesheet" href="styles.css">
   </head>
@@ -17,7 +17,8 @@
         <span>Backyard</span>
       </a>
       <nav class="nav-links" aria-label="Primary">
-        <a href="#events">Events</a>
+        <a href="#plan">Plan</a>
+        <a href="#events">Directory</a>
         <a href="#map">Map</a>
         <a href="#submit">Submit</a>
       </nav>
@@ -28,30 +29,237 @@
         <div class="hero-media" aria-hidden="true"></div>
         <div class="hero-overlay" aria-hidden="true"></div>
         <div class="hero-content">
-          <p class="eyebrow">Starter civic events map</p>
-          <h1 id="hero-title">St. Louis, no excuse to be bored this summer.</h1>
+          <p class="eyebrow">Free and affordable STL</p>
+          <h1 id="hero-title">Your backyard has a plan.</h1>
           <p class="hero-subtitle">
-            Free and affordable music, arts, movies, sports, festivals, museums,
-            food hangs, and community events across the city.
+            A civic, low-cost guide to music, parks, museums, food hangs,
+            movies, sports, and community days from the riverfront to South City.
           </p>
           <div class="hero-actions">
-            <a class="button primary" href="#events">Find a plan</a>
-            <a class="button secondary" href="#submit">Submit an event</a>
+            <a class="button primary" href="#plan">
+              <span aria-hidden="true">+</span>
+              Build my STL plan
+            </a>
+            <a class="button secondary" href="#events">Browse all events</a>
           </div>
         </div>
       </section>
 
       <section class="notice-band" aria-label="Data note">
         <p>
-          Starter/demo listings. Source links are included, but times, prices,
-          weather plans, and ticket rules should be verified before you go.
+          Starter data, source links included. Check times, prices, weather plans,
+          and ticket rules before you head out.
         </p>
       </section>
 
+      <section class="planner-section" id="plan" aria-labelledby="planner-title">
+        <div class="section-heading planner-heading">
+          <div>
+            <p class="eyebrow">Start here</p>
+            <h2 id="planner-title">Build a backyard plan first.</h2>
+          </div>
+          <ol class="stepper" aria-label="Preference steps">
+            <li data-step-indicator="group">
+              <span>1</span>
+              <strong>Who</strong>
+            </li>
+            <li data-step-indicator="budget">
+              <span>2</span>
+              <strong>Budget</strong>
+            </li>
+            <li data-step-indicator="vibe">
+              <span>3</span>
+              <strong>Vibe</strong>
+            </li>
+            <li data-step-indicator="area">
+              <span>4</span>
+              <strong>Area</strong>
+            </li>
+          </ol>
+        </div>
+
+        <div class="planner-layout">
+          <form class="planner-form" id="planner-form" aria-label="Build your STL plan">
+            <fieldset class="choice-group" data-step="group">
+              <legend><span>1</span> Who are you going with?</legend>
+              <div class="choice-grid compact">
+                <label class="choice-card">
+                  <input type="radio" name="group" value="solo">
+                  <span class="choice-icon" aria-hidden="true">1</span>
+                  <span class="choice-body">
+                    <strong>Solo</strong>
+                    <small>Museums, parks, easy routes.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="group" value="date">
+                  <span class="choice-icon" aria-hidden="true">2</span>
+                  <span class="choice-body">
+                    <strong>Date</strong>
+                    <small>Picnic, music, night-out energy.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="group" value="friends" checked>
+                  <span class="choice-icon" aria-hidden="true">3</span>
+                  <span class="choice-body">
+                    <strong>Friends</strong>
+                    <small>Low-commitment group hangs.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="group" value="family">
+                  <span class="choice-icon" aria-hidden="true">4</span>
+                  <span class="choice-body">
+                    <strong>Family</strong>
+                    <small>Kid-friendly, flexible stops.</small>
+                  </span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="choice-group" data-step="budget">
+              <legend><span>2</span> Budget?</legend>
+              <div class="choice-grid thirds">
+                <label class="choice-card">
+                  <input type="radio" name="budget" value="free" checked>
+                  <span class="choice-icon" aria-hidden="true">$0</span>
+                  <span class="choice-body">
+                    <strong>Free</strong>
+                    <small>No admission first.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="budget" value="under15">
+                  <span class="choice-icon" aria-hidden="true">$</span>
+                  <span class="choice-body">
+                    <strong>Under $15</strong>
+                    <small>Cheap ticket okay.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="budget" value="any">
+                  <span class="choice-icon" aria-hidden="true">*</span>
+                  <span class="choice-body">
+                    <strong>Any</strong>
+                    <small>Show the best fit.</small>
+                  </span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="choice-group" data-step="vibe">
+              <legend><span>3</span> Vibe?</legend>
+              <div class="choice-grid vibes">
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="music" checked>
+                  <span>Music</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="outdoors">
+                  <span>Outdoors</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="arts">
+                  <span>Arts</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="food">
+                  <span>Food</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="movies">
+                  <span>Movies</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="sports">
+                  <span>Sports</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="community">
+                  <span>Community</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="museums">
+                  <span>Museums</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="choice-group" data-step="area">
+              <legend><span>4</span> Area?</legend>
+              <div class="choice-grid areas">
+                <label class="choice-card">
+                  <input type="radio" name="area" value="downtown">
+                  <span class="choice-icon" aria-hidden="true">DT</span>
+                  <span class="choice-body">
+                    <strong>Downtown</strong>
+                    <small>Arch, stadiums, riverfront.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="area" value="forest-park">
+                  <span class="choice-icon" aria-hidden="true">FP</span>
+                  <span class="choice-body">
+                    <strong>Forest Park</strong>
+                    <small>Museums, Muny, lawn nights.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="area" value="south-city">
+                  <span class="choice-icon" aria-hidden="true">SC</span>
+                  <span class="choice-body">
+                    <strong>Tower Grove/South City</strong>
+                    <small>Markets, gardens, library stops.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="area" value="grand-center">
+                  <span class="choice-icon" aria-hidden="true">GC</span>
+                  <span class="choice-body">
+                    <strong>Grand Center</strong>
+                    <small>Galleries and arts district nights.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="area" value="any" checked>
+                  <span class="choice-icon" aria-hidden="true">ALL</span>
+                  <span class="choice-body">
+                    <strong>Any</strong>
+                    <small>Use the whole backyard.</small>
+                  </span>
+                </label>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="plan-panel" id="plan-results" aria-labelledby="plan-title" aria-live="polite">
+            <div class="plan-panel-top">
+              <p class="eyebrow">Your STL plan</p>
+              <span class="status-badge" id="plan-chip">Ready</span>
+            </div>
+            <h3 id="plan-title">Three picks for right now</h3>
+            <p class="plan-summary" id="plan-summary"></p>
+            <div class="plan-picks" id="plan-picks"></div>
+            <div class="plan-actions">
+              <button class="button primary" type="button" id="apply-plan">Apply filters</button>
+              <button class="button secondary" type="button" id="share-plan">Copy/share text</button>
+              <button class="button ghost" type="button" id="reset-plan">Reset</button>
+            </div>
+            <p class="share-status" id="share-status" role="status" aria-live="polite"></p>
+          </aside>
+        </div>
+      </section>
+
       <section class="filters-section" id="events" aria-labelledby="filters-title">
-        <div class="section-heading">
-          <p class="eyebrow">Search the backyard</p>
-          <h2 id="filters-title">What sounds good?</h2>
+        <div class="section-heading directory-heading">
+          <div>
+            <p class="eyebrow">Full directory</p>
+            <h2 id="filters-title">Search the backyard.</h2>
+          </div>
+          <p class="section-note">
+            The chooser comes first; this directory is here when you want the full list.
+          </p>
         </div>
 
         <form class="filters" id="filters" aria-label="Event filters">
@@ -106,13 +314,23 @@
           <button class="button reset" type="button" id="reset-filters">Reset</button>
         </form>
 
+        <div class="active-plan-note" id="active-plan-note" hidden>
+          <span id="active-plan-text"></span>
+          <button type="button" id="clear-plan-filter">Clear plan filter</button>
+        </div>
+
         <div class="tag-filter" id="tag-filter" aria-label="Good-for tags"></div>
       </section>
 
       <section class="map-section" id="map" aria-labelledby="map-title">
         <div class="section-heading">
-          <p class="eyebrow">No API keys, just vibes</p>
-          <h2 id="map-title">Neighborhood pinboard</h2>
+          <div>
+            <p class="eyebrow">River-to-park pinboard</p>
+            <h2 id="map-title">A civic map, STL style.</h2>
+          </div>
+          <p class="section-note">
+            Tap a pin to jump from the map into neighborhood results.
+          </p>
         </div>
         <div class="map-layout">
           <div class="stl-map" id="stl-map" aria-label="Stylized St. Louis neighborhood map"></div>
@@ -139,8 +357,10 @@
 
       <section class="curated-section" aria-label="Curated picks">
         <div class="section-heading">
-          <p class="eyebrow">Quick picks</p>
-          <h2>Four easy ways out</h2>
+          <div>
+            <p class="eyebrow">City playbooks</p>
+            <h2>Browse by how the day feels.</h2>
+          </div>
         </div>
         <div class="curated-grid">
           <section class="curated-list" aria-labelledby="week-title">
@@ -148,7 +368,7 @@
             <div id="this-week-list"></div>
           </section>
           <section class="curated-list" aria-labelledby="free-title">
-            <h3 id="free-title">Free picks</h3>
+            <h3 id="free-title">No-cost first</h3>
             <div id="free-list"></div>
           </section>
           <section class="curated-list" aria-labelledby="cheap-title">
@@ -156,10 +376,31 @@
             <div id="cheap-list"></div>
           </section>
           <section class="curated-list" aria-labelledby="hidden-title">
-            <h3 id="hidden-title">Hidden gems</h3>
+            <h3 id="hidden-title">Neighborhood gems</h3>
             <div id="hidden-list"></div>
           </section>
         </div>
+      </section>
+
+      <section class="verify-section" aria-labelledby="verify-title">
+        <div>
+          <p class="eyebrow">Starter data</p>
+          <h2 id="verify-title">Verify before you go.</h2>
+        </div>
+        <ul class="verify-list">
+          <li>
+            <strong>Open the source</strong>
+            <span>Confirm date, time, tickets, and rain plans.</span>
+          </li>
+          <li>
+            <strong>Check the fine print</strong>
+            <span>Free entry can still mean registration, parking, or capacity limits.</span>
+          </li>
+          <li>
+            <strong>Share the plan</strong>
+            <span>Copy the three-pick text and send it before the group chat drifts.</span>
+          </li>
+        </ul>
       </section>
 
       <section class="submit-section" id="submit" aria-labelledby="submit-title">
@@ -177,6 +418,8 @@
         >Submit by email</a>
       </section>
     </main>
+
+    <a class="sticky-plan-cta" href="#plan">Build your STL plan</a>
 
     <footer class="site-footer">
       <p>STL Backyard is an original static starter site. Verify event details before heading out.</p>

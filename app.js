@@ -1,11 +1,33 @@
+const DEFAULT_PLAN = {
+  group: "friends",
+  budget: "free",
+  vibes: ["music"],
+  area: "any"
+};
+
+const PLAN_STORAGE_KEY = "stl-backyard-plan";
+
 const state = {
   events: [],
   filteredEvents: [],
   selectedTags: new Set(),
-  activeNeighborhood: "all"
+  activeNeighborhood: "all",
+  activePlanFilter: null,
+  planPicks: []
 };
 
 const els = {
+  plannerForm: document.querySelector("#planner-form"),
+  planChip: document.querySelector("#plan-chip"),
+  planSummary: document.querySelector("#plan-summary"),
+  planPicks: document.querySelector("#plan-picks"),
+  applyPlan: document.querySelector("#apply-plan"),
+  sharePlan: document.querySelector("#share-plan"),
+  resetPlan: document.querySelector("#reset-plan"),
+  shareStatus: document.querySelector("#share-status"),
+  activePlanNote: document.querySelector("#active-plan-note"),
+  activePlanText: document.querySelector("#active-plan-text"),
+  clearPlanFilter: document.querySelector("#clear-plan-filter"),
   filters: document.querySelector("#filters"),
   search: document.querySelector("#search"),
   category: document.querySelector("#category"),
@@ -34,6 +56,63 @@ const categoryLabels = {
   food: "Food",
   arts: "Arts",
   community: "Community"
+};
+
+const budgetLabels = {
+  free: "Free first",
+  under15: "Under $15",
+  any: "Any budget"
+};
+
+const groupProfiles = {
+  solo: {
+    label: "solo",
+    tags: ["solo"],
+    categories: ["museums", "outdoors", "arts"]
+  },
+  date: {
+    label: "date",
+    tags: ["date night"],
+    categories: ["music", "arts", "food", "movies", "outdoors"]
+  },
+  friends: {
+    label: "friends",
+    tags: ["music heads", "food curious", "after work", "community"],
+    categories: ["music", "food", "sports", "community", "movies"]
+  },
+  family: {
+    label: "family",
+    tags: ["families", "kids"],
+    categories: ["museums", "outdoors", "movies", "community", "arts"]
+  }
+};
+
+const areaProfiles = {
+  downtown: {
+    label: "Downtown",
+    summaryLabel: "downtown by the Arch and stadiums",
+    neighborhoods: ["Downtown", "Laclede's Landing"]
+  },
+  "forest-park": {
+    label: "Forest Park",
+    summaryLabel: "around Forest Park",
+    neighborhoods: ["Forest Park", "Central West End"]
+  },
+  "south-city": {
+    label: "Tower Grove/South City",
+    summaryLabel: "Tower Grove and South City",
+    neighborhoods: ["Tower Grove", "South City", "Shaw", "Cherokee", "Soulard", "The Grove"]
+  },
+  "grand-center": {
+    label: "Grand Center",
+    summaryLabel: "Grand Center",
+    neighborhoods: ["Grand Center"]
+  },
+  any: {
+    label: "Any area",
+    summaryLabel: "across the whole backyard",
+    neighborhoods: []
+  }
 };
 
 const mapZones = [
@@ -79,12 +158,15 @@ async function init() {
     state.events = data.events.map(normalizeEvent);
     buildFilters();
     buildMap();
+    loadSavedPlan();
     bindEvents();
+    updatePlan();
     applyFilters();
   } catch (error) {
     els.resultCount.textContent = "Could not load event data.";
     els.emptyState.hidden = false;
-    els.emptyState.textContent = "Open this site through a static server or deploy it so data/events.json can load.";
+    els.emptyState.textContent =
+      "Open this site through a static server or deploy it so data/events.json can load.";
     console.error(error);
   }
 }
@@ -150,17 +232,22 @@ function buildMap() {
 }
 
 function bindEvents() {
+  els.plannerForm.addEventListener("change", () => {
+    clearShareStatus();
+    updatePlan();
+    savePlanPreferences();
+  });
+
+  els.applyPlan.addEventListener("click", applyPlanToFilters);
+  els.sharePlan.addEventListener("click", shareCurrentPlan);
+  els.resetPlan.addEventListener("click", resetPlanner);
+
   els.filters.addEventListener("input", applyFilters);
   els.filters.addEventListener("change", applyFilters);
 
-  els.reset.addEventListener("click", () => {
-    els.filters.reset();
-    state.selectedTags.clear();
-    state.activeNeighborhood = "all";
-    els.neighborhood.value = "all";
-    document.querySelectorAll(".tag-button").forEach((button) => {
-      button.setAttribute("aria-pressed", "false");
-    });
+  els.reset.addEventListener("click", resetDirectoryFilters);
+  els.clearPlanFilter.addEventListener("click", () => {
+    state.activePlanFilter = null;
     applyFilters();
   });
 
@@ -197,6 +284,288 @@ function bindEvents() {
   });
 }
 
+function loadSavedPlan() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || "null");
+    if (!saved) return;
+    setRadioValue("group", saved.group || DEFAULT_PLAN.group);
+    setRadioValue("budget", saved.budget || DEFAULT_PLAN.budget);
+    setRadioValue("area", saved.area || DEFAULT_PLAN.area);
+    setCheckboxValues("vibe", Array.isArray(saved.vibes) ? saved.vibes : DEFAULT_PLAN.vibes);
+  } catch {
+    localStorage.removeItem(PLAN_STORAGE_KEY);
+  }
+}
+
+function savePlanPreferences() {
+  try {
+    localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(getPlanPreferences()));
+  } catch {
+    // Storage is optional; the planner still works without it.
+  }
+}
+
+function setRadioValue(name, value) {
+  const input = els.plannerForm.querySelector(`input[name="${name}"][value="${CSS.escape(value)}"]`);
+  if (input) input.checked = true;
+}
+
+function setCheckboxValues(name, values) {
+  els.plannerForm.querySelectorAll(`input[name="${name}"]`).forEach((input) => {
+    input.checked = values.includes(input.value);
+  });
+}
+
+function updatePlan() {
+  updateChoiceStates();
+  updateStepper();
+
+  const preferences = getPlanPreferences();
+  const picks = buildPlanRecommendations(preferences);
+  state.planPicks = picks;
+
+  els.planChip.textContent = `${budgetLabels[preferences.budget]} / ${areaProfiles[preferences.area].label}`;
+  els.planSummary.textContent = getPlanSummary(preferences);
+  renderPlanPicks(picks);
+}
+
+function updateChoiceStates() {
+  document.querySelectorAll(".choice-card, .choice-pill").forEach((choice) => {
+    const input = choice.querySelector("input");
+    choice.classList.toggle("is-selected", Boolean(input && input.checked));
+  });
+}
+
+function updateStepper() {
+  const preferences = getPlanPreferences();
+  const completed = {
+    group: Boolean(preferences.group),
+    budget: Boolean(preferences.budget),
+    vibe: preferences.vibes.length > 0,
+    area: Boolean(preferences.area)
+  };
+  const activeStep = Object.keys(completed).find((step) => !completed[step]) || "area";
+
+  document.querySelectorAll("[data-step-indicator]").forEach((step) => {
+    const key = step.dataset.stepIndicator;
+    step.classList.toggle("is-complete", completed[key]);
+    step.classList.toggle("is-active", key === activeStep);
+  });
+}
+
+function getPlanPreferences() {
+  const data = new FormData(els.plannerForm);
+  const group = data.get("group") || DEFAULT_PLAN.group;
+  const budget = data.get("budget") || DEFAULT_PLAN.budget;
+  const area = data.get("area") || DEFAULT_PLAN.area;
+  const vibes = data.getAll("vibe");
+
+  return {
+    group,
+    budget,
+    area,
+    vibes,
+    neighborhoods: areaProfiles[area]?.neighborhoods || []
+  };
+}
+
+function buildPlanRecommendations(preferences) {
+  const today = startOfDay(new Date());
+  const futureEvents = state.events.filter((event) => startOfDay(event.end) >= today);
+  const source = futureEvents.length >= 3 ? futureEvents : state.events;
+  let candidates = source.filter((event) => {
+    return matchesPlanBudget(event, preferences) && matchesPlanArea(event, preferences);
+  });
+
+  if (candidates.length < 3) {
+    candidates = source.filter((event) => matchesPlanBudget(event, preferences));
+  }
+
+  if (candidates.length < 3) {
+    candidates = source;
+  }
+
+  return candidates
+    .map((event) => ({ event, score: scorePlanEvent(event, preferences, today) }))
+    .sort((a, b) => {
+      return b.score - a.score || a.event.start - b.event.start || a.event.title.localeCompare(b.event.title);
+    })
+    .slice(0, 3)
+    .map(({ event }) => event);
+}
+
+function scorePlanEvent(event, preferences, today) {
+  const group = groupProfiles[preferences.group] || groupProfiles[DEFAULT_PLAN.group];
+  const tags = new Set(event.goodFor || []);
+  let score = 0;
+
+  if (preferences.vibes.includes(event.category)) score += 12;
+  preferences.vibes.forEach((vibe) => {
+    if (tags.has(vibe)) score += 3;
+  });
+
+  group.tags.forEach((tag) => {
+    if (tags.has(tag)) score += 7;
+  });
+
+  if (group.categories.includes(event.category)) score += 3;
+  if (matchesPlanArea(event, preferences)) score += 5;
+  if (matchesPlanBudget(event, preferences)) score += 4;
+  if (event.featured) score += 2;
+  if (event.hiddenGem) score += 1;
+  if (event.status === "source-confirmed") score += 1;
+
+  const daysAway = Math.round((startOfDay(event.start) - today) / 86400000);
+  if (daysAway >= 0 && daysAway <= 14) score += 2;
+  if (daysAway > 45) score -= 0.75;
+
+  return score;
+}
+
+function matchesPlanBudget(event, preferences) {
+  if (preferences.budget === "free") return event.priceMin === 0;
+  if (preferences.budget === "under15") return event.priceMin <= 15;
+  return true;
+}
+
+function matchesPlanArea(event, preferences) {
+  if (!preferences.neighborhoods.length) return true;
+  return preferences.neighborhoods.includes(event.neighborhood);
+}
+
+function matchesPlanVibe(event, preferences) {
+  if (!preferences.vibes.length) return true;
+  const tags = new Set(event.goodFor || []);
+  return preferences.vibes.includes(event.category) || preferences.vibes.some((vibe) => tags.has(vibe));
+}
+
+function getPlanSummary(preferences) {
+  const group = groupProfiles[preferences.group]?.label || "your group";
+  const budget = budgetLabels[preferences.budget].toLowerCase();
+  const vibe = preferences.vibes.length
+    ? preferences.vibes.map((item) => categoryLabels[item] || toTitle(item)).join(", ")
+    : "open-vibe";
+  const area = areaProfiles[preferences.area].summaryLabel;
+
+  return `For ${group}, ${budget}, ${vibe.toLowerCase()}, ${area}. Starter picks are source-linked where possible.`;
+}
+
+function renderPlanPicks(picks) {
+  els.planPicks.innerHTML = "";
+
+  if (picks.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "event-desc";
+    empty.textContent = "No starter picks match yet. Try another area or budget.";
+    els.planPicks.append(empty);
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  picks.forEach((event, index) => {
+    const item = document.createElement("article");
+    item.className = "plan-pick";
+    item.innerHTML = `
+      <div class="plan-pick-number">${index + 1}</div>
+      <div class="plan-pick-body">
+        <button type="button" data-focus-event="${escapeAttribute(event.id)}">${escapeHtml(event.title)}</button>
+        <span>${formatDateRange(event)} / ${escapeHtml(event.neighborhood)} / ${escapeHtml(event.priceLabel)}</span>
+        <small>${escapeHtml(event.whyGo)}</small>
+      </div>
+    `;
+    fragment.append(item);
+  });
+
+  els.planPicks.append(fragment);
+}
+
+function applyPlanToFilters() {
+  const preferences = getPlanPreferences();
+  state.activePlanFilter = clonePlanPreferences(preferences);
+  state.selectedTags.clear();
+
+  els.search.value = "";
+  els.price.value = preferences.budget === "free" ? "free" : preferences.budget === "under15" ? "under15" : "all";
+  els.category.value = preferences.vibes.length === 1 ? preferences.vibes[0] : "all";
+  els.neighborhood.value = getSingleNeighborhoodValue(preferences);
+  els.dateFilter.value = "all";
+
+  document.querySelectorAll(".tag-button").forEach((button) => {
+    button.setAttribute("aria-pressed", "false");
+  });
+
+  applyFilters();
+  document.querySelector("#events").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function clonePlanPreferences(preferences) {
+  return {
+    group: preferences.group,
+    budget: preferences.budget,
+    area: preferences.area,
+    vibes: [...preferences.vibes],
+    neighborhoods: [...preferences.neighborhoods]
+  };
+}
+
+function getSingleNeighborhoodValue(preferences) {
+  if (preferences.neighborhoods.length !== 1) return "all";
+  const neighborhood = preferences.neighborhoods[0];
+  return [...els.neighborhood.options].some((option) => option.value === neighborhood) ? neighborhood : "all";
+}
+
+async function shareCurrentPlan() {
+  const text = getPlanShareText();
+  clearShareStatus();
+
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Your STL Backyard plan",
+        text
+      });
+      els.shareStatus.textContent = "Plan shared.";
+      return;
+    }
+
+    await copyText(text);
+    els.shareStatus.textContent = "Plan copied.";
+  } catch (error) {
+    if (error.name === "AbortError") return;
+    try {
+      await copyText(text);
+      els.shareStatus.textContent = "Plan copied.";
+    } catch {
+      els.shareStatus.textContent = "Copy failed.";
+    }
+  }
+}
+
+function getPlanShareText() {
+  const preferences = getPlanPreferences();
+  const summary = getPlanSummary(preferences);
+  const picks = state.planPicks
+    .map((event, index) => {
+      return `${index + 1}. ${event.title} - ${formatDateRange(event)}, ${event.time} at ${event.venue} (${event.neighborhood}). ${event.priceLabel}. ${event.link}`;
+    })
+    .join("\n");
+
+  return `Your STL Backyard plan\n${summary}\n\n${picks}\n\nStarter data: verify details before you go.`;
+}
+
+function resetPlanner() {
+  els.plannerForm.reset();
+  state.activePlanFilter = null;
+  localStorage.removeItem(PLAN_STORAGE_KEY);
+  clearShareStatus();
+  updatePlan();
+  applyFilters();
+}
+
+function clearShareStatus() {
+  els.shareStatus.textContent = "";
+}
+
 function applyFilters() {
   const query = els.search.value.trim().toLowerCase();
   const category = els.category.value;
@@ -208,6 +577,7 @@ function applyFilters() {
   state.filteredEvents = state.events
     .filter((event) => {
       return (
+        matchesAppliedPlan(event) &&
         matchesQuery(event, query) &&
         matchesCategory(event, category) &&
         matchesPrice(event, price) &&
@@ -218,10 +588,50 @@ function applyFilters() {
     })
     .sort((a, b) => a.start - b.start || a.title.localeCompare(b.title));
 
+  renderActivePlanNote();
   renderEvents(state.filteredEvents);
   renderCuratedSections();
   renderPins();
   renderMapSummary();
+}
+
+function matchesAppliedPlan(event) {
+  if (!state.activePlanFilter) return true;
+  return (
+    matchesPlanBudget(event, state.activePlanFilter) &&
+    matchesPlanArea(event, state.activePlanFilter) &&
+    matchesPlanVibe(event, state.activePlanFilter)
+  );
+}
+
+function renderActivePlanNote() {
+  if (!state.activePlanFilter) {
+    els.activePlanNote.hidden = true;
+    els.activePlanText.textContent = "";
+    return;
+  }
+
+  const preferences = state.activePlanFilter;
+  const group = groupProfiles[preferences.group]?.label || "your group";
+  const vibe = preferences.vibes.length
+    ? preferences.vibes.map((item) => categoryLabels[item] || toTitle(item)).join(", ")
+    : "all vibes";
+
+  els.activePlanText.textContent =
+    `Plan filter active: ${group}, ${budgetLabels[preferences.budget]}, ${vibe}, ${areaProfiles[preferences.area].label}`;
+  els.activePlanNote.hidden = false;
+}
+
+function resetDirectoryFilters() {
+  els.filters.reset();
+  state.selectedTags.clear();
+  state.activeNeighborhood = "all";
+  state.activePlanFilter = null;
+  els.neighborhood.value = "all";
+  document.querySelectorAll(".tag-button").forEach((button) => {
+    button.setAttribute("aria-pressed", "false");
+  });
+  applyFilters();
 }
 
 function matchesQuery(event, query) {
@@ -295,13 +705,16 @@ function createEventCard(event) {
         <span>${formatMonth(event.start)}</span>
         <strong>${event.start.getDate()}</strong>
       </div>
-      <span class="status-badge">${event.status === "source-confirmed" ? "Source-linked" : "Verify details"}</span>
+      <div class="card-badges">
+        <span class="status-badge">${event.status === "source-confirmed" ? "Source-linked" : "Verify details"}</span>
+        ${event.featured ? '<span class="feature-badge">Backyard pick</span>' : ""}
+      </div>
     </div>
     <div>
       <div class="meta-row">
         <span>${formatDateRange(event)}</span>
         <span class="meta-dot"></span>
-        <span>${event.time}</span>
+        <span>${escapeHtml(event.time)}</span>
       </div>
       <h3>${escapeHtml(event.title)}</h3>
     </div>
@@ -320,17 +733,18 @@ function createEventCard(event) {
       ${(event.goodFor || []).map((tag) => `<span>${escapeHtml(toTitle(tag))}</span>`).join("")}
     </div>
     <div class="card-actions">
-      <a href="${event.link}" target="_blank" rel="noreferrer">Official/source</a>
-      <button class="copy-button" type="button" data-copy="${event.id}">Copy blurb</button>
+      <a href="${escapeAttribute(event.link)}" target="_blank" rel="noreferrer">Official/source</a>
+      <button class="copy-button" type="button" data-copy="${escapeAttribute(event.id)}" aria-label="Copy ${escapeAttribute(event.title)} blurb">Copy blurb</button>
     </div>
-    <p class="source-row">Source: <a href="${event.sourceUrl}" target="_blank" rel="noreferrer">${escapeHtml(event.sourceName)}</a></p>
+    <p class="source-row">Source: <a href="${escapeAttribute(event.sourceUrl)}" target="_blank" rel="noreferrer">${escapeHtml(event.sourceName)}</a></p>
   `;
 
   article.querySelector(".copy-button").addEventListener("click", async (clickEvent) => {
     const button = clickEvent.currentTarget;
-    const text = `${event.title} - ${formatDateRange(event)}, ${event.time} at ${event.venue} (${event.neighborhood}). ${event.priceLabel}. ${event.link}`;
+    const text =
+      `${event.title} - ${formatDateRange(event)}, ${event.time} at ${event.venue} (${event.neighborhood}). ${event.priceLabel}. ${event.link}`;
     try {
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       button.textContent = "Copied";
       window.setTimeout(() => {
         button.textContent = "Copy blurb";
@@ -385,7 +799,7 @@ function renderMiniList(container, events) {
     const item = document.createElement("div");
     item.className = "mini-event";
     item.innerHTML = `
-      <button type="button" data-focus-event="${event.id}">${escapeHtml(event.title)}</button>
+      <button type="button" data-focus-event="${escapeAttribute(event.id)}">${escapeHtml(event.title)}</button>
       <small>${formatDateRange(event)} / ${escapeHtml(event.neighborhood)} / ${escapeHtml(event.priceLabel)}</small>
     `;
     fragment.append(item);
@@ -401,7 +815,7 @@ function renderPins() {
     const position = pinPositions[neighborhood] || { x: 50, y: 50 };
     const pin = document.createElement("button");
     pin.type = "button";
-    pin.className = `pin${state.activeNeighborhood === neighborhood ? " active" : ""}`;
+    pin.className = `pin${isActiveMapNeighborhood(neighborhood) ? " active" : ""}`;
     pin.style.left = `${position.x}%`;
     pin.style.top = `${position.y}%`;
     pin.dataset.neighborhood = neighborhood;
@@ -416,6 +830,12 @@ function renderPins() {
 
     els.map.append(pin, label);
   });
+}
+
+function isActiveMapNeighborhood(neighborhood) {
+  if (state.activeNeighborhood === neighborhood) return true;
+  if (!state.activePlanFilter || state.activePlanFilter.area === "any") return false;
+  return state.activePlanFilter.neighborhoods.includes(neighborhood);
 }
 
 function renderMapSummary() {
@@ -433,7 +853,7 @@ function renderMapSummary() {
     row.className = "summary-row";
     row.innerHTML = `
       <button type="button" data-neighborhood="${escapeAttribute(neighborhood)}">${escapeHtml(neighborhood)}</button>
-      <small>${count}</small>
+      <small>${count} ${count === 1 ? "pick" : "picks"}</small>
     `;
     els.mapSummary.append(row);
   });
@@ -442,6 +862,7 @@ function renderMapSummary() {
 function setNeighborhood(neighborhood) {
   els.neighborhood.value = neighborhood;
   state.activeNeighborhood = neighborhood;
+  state.activePlanFilter = null;
   applyFilters();
   document.querySelector("#events").scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -453,22 +874,41 @@ function focusEvent(id) {
   els.neighborhood.value = "all";
   els.dateFilter.value = "all";
   state.selectedTags.clear();
+  state.activePlanFilter = null;
   document.querySelectorAll(".tag-button").forEach((button) => {
     button.setAttribute("aria-pressed", "false");
   });
   applyFilters();
 
-  const card = document.querySelector(`#event-${CSS.escape(id)}`);
+  const card = document.getElementById(`event-${id}`);
   if (!card) return;
   card.scrollIntoView({ behavior: "smooth", block: "center" });
   card.animate(
     [
-      { boxShadow: "0 0 0 0 rgba(226, 170, 53, 0.0)" },
-      { boxShadow: "0 0 0 8px rgba(226, 170, 53, 0.45)" },
+      { boxShadow: "0 0 0 0 rgba(229, 179, 59, 0.0)" },
+      { boxShadow: "0 0 0 8px rgba(229, 179, 59, 0.45)" },
       { boxShadow: "6px 6px 0 rgba(24, 33, 31, 0.08)" }
     ],
     { duration: 1200, easing: "ease-out" }
   );
+}
+
+async function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-999px";
+  document.body.append(textarea);
+  textarea.select();
+  const copied = document.execCommand("copy");
+  textarea.remove();
+  if (!copied) throw new Error("Copy command failed");
 }
 
 function parseLocalDate(value) {

@@ -6,7 +6,7 @@ STL Backyard is a polished static starter site for free and affordable summer ev
 
 - `index.html` - page structure
 - `styles.css` - responsive visual design
-- `app.js` - filters, card rendering, map pins, curated sections
+- `app.js` - chooser recommendations, filters, card rendering, map pins, curated sections
 - `data/events.json` - editable starter event data
 - `assets/stl-backyard-hero.png` - generated local hero artwork
 
