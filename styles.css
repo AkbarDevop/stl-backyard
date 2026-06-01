@@ -1069,6 +1069,119 @@ body.onboarding-open {
   box-shadow: var(--shadow);
 }
 
+.stl-map.leaflet-map {
+  background: #dfe9df;
+}
+
+.stl-map.leaflet-map::before,
+.stl-map.leaflet-map::after {
+  display: none;
+}
+
+.stl-map .leaflet-tile-pane {
+  filter: saturate(0.86) contrast(1.04) sepia(0.1);
+}
+
+.stl-map .leaflet-control-zoom a {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+  font-weight: 950;
+}
+
+.stl-map .leaflet-control-attribution {
+  color: var(--muted);
+  background: rgba(255, 250, 240, 0.86);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.stl-leaflet-marker-wrap {
+  background: transparent;
+  border: 0;
+}
+
+.stl-leaflet-marker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: var(--white);
+  background: var(--brick);
+  border: 2px solid var(--ink);
+  border-radius: 50% 50% 50% 0;
+  box-shadow: 4px 4px 0 rgba(24, 33, 31, 0.26);
+  transform: rotate(-45deg);
+}
+
+.stl-leaflet-marker strong {
+  font-size: 0.86rem;
+  font-weight: 950;
+  transform: rotate(45deg);
+}
+
+.stl-leaflet-marker.active {
+  background: var(--park);
+}
+
+.stl-map-popup .leaflet-popup-content-wrapper {
+  color: var(--ink);
+  background: var(--paper-strong);
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: 5px 5px 0 rgba(24, 33, 31, 0.18);
+}
+
+.stl-map-popup .leaflet-popup-content {
+  margin: 12px;
+}
+
+.stl-map-popup .leaflet-popup-tip {
+  background: var(--paper-strong);
+  border: 2px solid var(--ink);
+}
+
+.map-popup-card {
+  display: grid;
+  gap: 8px;
+  min-width: 210px;
+}
+
+.map-popup-card p {
+  margin: 0;
+  color: var(--brick);
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.map-popup-card ul {
+  display: grid;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.map-popup-card button {
+  padding: 0;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  font-weight: 950;
+  text-align: left;
+  cursor: pointer;
+}
+
+.map-popup-card .map-popup-filter {
+  justify-self: start;
+  padding: 7px 9px;
+  color: var(--white);
+  background: var(--river);
+  border: 2px solid var(--ink);
+  border-radius: 7px;
+}
+
 .stl-map::before {
   position: absolute;
   right: -46px;

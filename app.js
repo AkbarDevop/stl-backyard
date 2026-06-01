@@ -23,7 +23,9 @@ const state = {
   activePlanFilter: null,
   planPicks: [],
   currentPlannerStep: 0,
-  plannerReturnFocus: null
+  plannerReturnFocus: null,
+  map: null,
+  markerLayer: null
 };
 
 const els = {
@@ -163,6 +165,25 @@ const pinPositions = {
   "Laclede's Landing": { x: 80, y: 32 }
 };
 
+const neighborhoodCoordinates = {
+  Downtown: [38.6247, -90.1848],
+  "Laclede's Landing": [38.6309, -90.1835],
+  "Forest Park": [38.6406, -90.2845],
+  Shaw: [38.6137, -90.2587],
+  "Grand Center": [38.6406, -90.2326],
+  "Tower Grove": [38.6061, -90.2577],
+  Soulard: [38.6098, -90.2044],
+  Kirkwood: [38.5801, -90.4068],
+  Maplewood: [38.6126, -90.3246],
+  Cherokee: [38.5932, -90.2291],
+  "Central West End": [38.6426, -90.2612],
+  "The Grove": [38.6272, -90.2551],
+  "North City": [38.6689, -90.2154],
+  "South City": [38.5687, -90.2628]
+};
+
+const stlMapCenter = [38.627, -90.255];
+
 init();
 
 async function init() {
@@ -239,14 +260,34 @@ function buildFilters() {
 }
 
 function buildMap() {
-  mapZones.forEach((zone) => {
-    const div = document.createElement("div");
-    div.className = "map-zone";
-    div.textContent = zone.name;
-    div.style.left = `${zone.x}%`;
-    div.style.top = `${zone.y}%`;
-    els.map.append(div);
+  if (!window.L) {
+    mapZones.forEach((zone) => {
+      const div = document.createElement("div");
+      div.className = "map-zone";
+      div.textContent = zone.name;
+      div.style.left = `${zone.x}%`;
+      div.style.top = `${zone.y}%`;
+      els.map.append(div);
+    });
+    return;
+  }
+
+  els.map.classList.add("leaflet-map");
+  state.map = L.map(els.map, {
+    center: stlMapCenter,
+    zoom: 11,
+    minZoom: 10,
+    maxZoom: 16,
+    scrollWheelZoom: false,
+    zoomControl: true
   });
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(state.map);
+
+  state.markerLayer = L.layerGroup().addTo(state.map);
 }
 
 function bindEvents() {
@@ -313,9 +354,9 @@ function bindEvents() {
   });
 
   els.map.addEventListener("click", (event) => {
-    const pin = event.target.closest(".pin");
+    const pin = event.target.closest(".pin, [data-map-neighborhood]");
     if (!pin) return;
-    setNeighborhood(pin.dataset.neighborhood);
+    setNeighborhood(pin.dataset.neighborhood || pin.dataset.mapNeighborhood);
   });
 
   els.mapSummary.addEventListener("click", (event) => {
@@ -933,6 +974,11 @@ function renderMiniList(container, events) {
 }
 
 function renderPins() {
+  if (state.map && state.markerLayer) {
+    renderLeafletPins();
+    return;
+  }
+
   els.map.querySelectorAll(".pin, .pin-label").forEach((node) => node.remove());
 
   const counts = countBy(state.filteredEvents, (event) => event.neighborhood);
@@ -955,6 +1001,63 @@ function renderPins() {
 
     els.map.append(pin, label);
   });
+}
+
+function renderLeafletPins() {
+  state.markerLayer.clearLayers();
+  const counts = countBy(state.filteredEvents, (event) => event.neighborhood);
+  const bounds = [];
+
+  Object.entries(counts).forEach(([neighborhood, count]) => {
+    const coordinates = neighborhoodCoordinates[neighborhood];
+    if (!coordinates) return;
+
+    const active = isActiveMapNeighborhood(neighborhood);
+    const marker = L.marker(coordinates, {
+      title: `${neighborhood}, ${count} events`,
+      icon: L.divIcon({
+        className: "stl-leaflet-marker-wrap",
+        iconSize: [46, 54],
+        iconAnchor: [23, 48],
+        popupAnchor: [0, -46],
+        html: `<span class="stl-leaflet-marker${active ? " active" : ""}"><strong>${count}</strong></span>`
+      })
+    });
+
+    marker.bindPopup(renderMapPopup(neighborhood, count), {
+      className: "stl-map-popup",
+      maxWidth: 290
+    });
+    marker.addTo(state.markerLayer);
+    bounds.push(coordinates);
+  });
+
+  if (bounds.length === 1) {
+    state.map.setView(bounds[0], 13, { animate: true });
+  } else if (bounds.length > 1) {
+    state.map.fitBounds(bounds, { padding: [34, 34], maxZoom: 12 });
+  } else {
+    state.map.setView(stlMapCenter, 11, { animate: true });
+  }
+}
+
+function renderMapPopup(neighborhood, count) {
+  const picks = state.filteredEvents
+    .filter((event) => event.neighborhood === neighborhood)
+    .slice(0, 3);
+  const items = picks
+    .map((event) => `<li><button type="button" data-focus-event="${escapeAttribute(event.id)}">${escapeHtml(event.title)}</button></li>`)
+    .join("");
+
+  return `
+    <div class="map-popup-card">
+      <p>${escapeHtml(neighborhood)} / ${count} ${count === 1 ? "pick" : "picks"}</p>
+      <ul>${items}</ul>
+      <button type="button" class="map-popup-filter" data-map-neighborhood="${escapeAttribute(neighborhood)}">
+        Show this area
+      </button>
+    </div>
+  `;
 }
 
 function isActiveMapNeighborhood(neighborhood) {

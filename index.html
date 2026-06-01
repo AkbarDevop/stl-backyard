@@ -8,6 +8,10 @@
       name="description"
       content="A playful civic guide to free and affordable summer events across St. Louis."
     >
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -164,7 +168,7 @@
             <h2 id="map-title">A civic map, STL style.</h2>
           </div>
           <p class="section-note">
-            Tap a pin to jump from the map into neighborhood results.
+            Real OpenStreetMap tiles, STL neighborhood pins, and filtered picks that move with the list.
           </p>
         </div>
         <div class="map-layout">
@@ -488,6 +492,7 @@
       <a href="#top">Back to top</a>
     </footer>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
     <script src="app.js" defer></script>
   </body>
 </html>
