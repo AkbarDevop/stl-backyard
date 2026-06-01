@@ -6,6 +6,7 @@ const DEFAULT_PLAN = {
 };
 
 const PLAN_STORAGE_KEY = "stl-backyard-plan";
+const ONBOARDING_SEEN_KEY = "stl-backyard-onboarding-seen";
 
 const state = {
   events: [],
@@ -44,7 +45,9 @@ const els = {
   thisWeek: document.querySelector("#this-week-list"),
   free: document.querySelector("#free-list"),
   cheap: document.querySelector("#cheap-list"),
-  hidden: document.querySelector("#hidden-list")
+  hidden: document.querySelector("#hidden-list"),
+  closePlanner: document.querySelector("#close-planner"),
+  openPlannerLinks: document.querySelectorAll("[data-open-planner]")
 };
 
 const categoryLabels = {
@@ -162,6 +165,7 @@ async function init() {
     bindEvents();
     updatePlan();
     applyFilters();
+    maybeOpenOnboarding();
   } catch (error) {
     els.resultCount.textContent = "Could not load event data.";
     els.emptyState.hidden = false;
@@ -241,6 +245,20 @@ function bindEvents() {
   els.applyPlan.addEventListener("click", applyPlanToFilters);
   els.sharePlan.addEventListener("click", shareCurrentPlan);
   els.resetPlan.addEventListener("click", resetPlanner);
+  els.closePlanner.addEventListener("click", closeOnboardingModal);
+
+  els.openPlannerLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      openOnboardingModal();
+    });
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && document.body.classList.contains("onboarding-open")) {
+      closeOnboardingModal();
+    }
+  });
 
   els.filters.addEventListener("input", applyFilters);
   els.filters.addEventListener("change", applyFilters);
@@ -282,6 +300,25 @@ function bindEvents() {
     if (!mini) return;
     focusEvent(mini.dataset.focusEvent);
   });
+}
+
+function maybeOpenOnboarding() {
+  if (localStorage.getItem(ONBOARDING_SEEN_KEY) === "1") return;
+  openOnboardingModal({ markSeen: false });
+}
+
+function openOnboardingModal({ markSeen = false } = {}) {
+  document.body.classList.add("onboarding-open");
+  if (markSeen) localStorage.setItem(ONBOARDING_SEEN_KEY, "1");
+  window.setTimeout(() => {
+    const checked = els.plannerForm.querySelector("input:checked");
+    checked?.focus({ preventScroll: true });
+  }, 40);
+}
+
+function closeOnboardingModal() {
+  document.body.classList.remove("onboarding-open");
+  localStorage.setItem(ONBOARDING_SEEN_KEY, "1");
 }
 
 function loadSavedPlan() {
@@ -483,6 +520,8 @@ function applyPlanToFilters() {
   const preferences = getPlanPreferences();
   state.activePlanFilter = clonePlanPreferences(preferences);
   state.selectedTags.clear();
+  savePlanPreferences();
+  closeOnboardingModal();
 
   els.search.value = "";
   els.price.value = preferences.budget === "free" ? "free" : preferences.budget === "under15" ? "under15" : "all";
@@ -557,6 +596,7 @@ function resetPlanner() {
   els.plannerForm.reset();
   state.activePlanFilter = null;
   localStorage.removeItem(PLAN_STORAGE_KEY);
+  localStorage.removeItem(ONBOARDING_SEEN_KEY);
   clearShareStatus();
   updatePlan();
   applyFilters();

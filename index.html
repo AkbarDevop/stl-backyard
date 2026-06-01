@@ -36,7 +36,7 @@
             movies, sports, and community days from the riverfront to South City.
           </p>
           <div class="hero-actions">
-            <a class="button primary" href="#plan">
+            <a class="button primary" href="#plan" data-open-planner>
               <span aria-hidden="true">+</span>
               Build my STL plan
             </a>
@@ -57,7 +57,9 @@
           <div>
             <p class="eyebrow">Start here</p>
             <h2 id="planner-title">Build a backyard plan first.</h2>
+            <p class="modal-only modal-subtitle">Pick a few preferences before the map opens up — NYC-style, but STL-coded.</p>
           </div>
+          <button class="modal-close modal-only" type="button" id="close-planner" aria-label="Close planner">Skip for now</button>
           <ol class="stepper" aria-label="Preference steps">
             <li data-step-indicator="group">
               <span>1</span>
@@ -419,7 +421,7 @@
       </section>
     </main>
 
-    <a class="sticky-plan-cta" href="#plan">Build your STL plan</a>
+    <a class="sticky-plan-cta" href="#plan" data-open-planner>Build your STL plan</a>
 
     <footer class="site-footer">
       <p>STL Backyard is an original static starter site. Verify event details before heading out.</p>

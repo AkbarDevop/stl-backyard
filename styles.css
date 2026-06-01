@@ -309,6 +309,83 @@ h3 {
   align-items: start;
 }
 
+.modal-only {
+  display: none;
+}
+
+.modal-subtitle {
+  max-width: 560px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.modal-close {
+  min-height: 40px;
+  padding: 8px 12px;
+  color: var(--ink);
+  background: var(--paper-strong);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+body.onboarding-open {
+  overflow: hidden;
+}
+
+body.onboarding-open .planner-section {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  max-width: none;
+  padding: clamp(16px, 3vw, 34px);
+  overflow: auto;
+  background:
+    radial-gradient(circle at 20% 12%, rgba(229, 179, 59, 0.2), transparent 24%),
+    radial-gradient(circle at 82% 20%, rgba(31, 127, 157, 0.22), transparent 28%),
+    rgba(16, 38, 33, 0.86);
+  backdrop-filter: blur(10px);
+}
+
+body.onboarding-open .planner-heading,
+body.onboarding-open .planner-layout {
+  max-width: 1120px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+body.onboarding-open .planner-heading {
+  position: relative;
+  align-items: start;
+  padding: 18px;
+  margin-bottom: 0;
+  background: var(--paper-strong);
+  border: 2px solid var(--ink);
+  border-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: var(--shadow);
+}
+
+body.onboarding-open .planner-layout {
+  padding: 0 18px 18px;
+  background: var(--paper-strong);
+  border: 2px solid var(--ink);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  box-shadow: var(--shadow);
+}
+
+body.onboarding-open .modal-only {
+  display: block;
+}
+
+body.onboarding-open .plan-panel {
+  position: sticky;
+  top: 18px;
+}
+
 .stepper {
   display: flex;
   flex-wrap: wrap;
