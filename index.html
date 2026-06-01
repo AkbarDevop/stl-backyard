@@ -53,203 +53,36 @@
       </section>
 
       <section class="planner-section" id="plan" aria-labelledby="planner-title">
-        <div class="section-heading planner-heading">
+        <div class="planner-intro">
           <div>
-            <p class="eyebrow">Start here</p>
-            <h2 id="planner-title">Build a backyard plan first.</h2>
-            <p class="modal-only modal-subtitle">Pick a few preferences before the map opens up — NYC-style, but STL-coded.</p>
+            <p class="eyebrow">Plan first</p>
+            <h2 id="planner-title">Four quick choices, three local picks.</h2>
+            <p class="section-note planner-note">
+              Start with the company, budget, mood, and part of town that fit the day.
+            </p>
           </div>
-          <button class="modal-close modal-only" type="button" id="close-planner" aria-label="Close planner">Skip for now</button>
-          <ol class="stepper" aria-label="Preference steps">
-            <li data-step-indicator="group">
-              <span>1</span>
-              <strong>Who</strong>
-            </li>
-            <li data-step-indicator="budget">
-              <span>2</span>
-              <strong>Budget</strong>
-            </li>
-            <li data-step-indicator="vibe">
-              <span>3</span>
-              <strong>Vibe</strong>
-            </li>
-            <li data-step-indicator="area">
-              <span>4</span>
-              <strong>Area</strong>
-            </li>
-          </ol>
+          <button class="button primary" type="button" data-open-planner>
+            <span aria-hidden="true">+</span>
+            Build my STL plan
+          </button>
         </div>
 
-        <div class="planner-layout">
-          <form class="planner-form" id="planner-form" aria-label="Build your STL plan">
-            <fieldset class="choice-group" data-step="group">
-              <legend><span>1</span> Who are you going with?</legend>
-              <div class="choice-grid compact">
-                <label class="choice-card">
-                  <input type="radio" name="group" value="solo">
-                  <span class="choice-icon" aria-hidden="true">1</span>
-                  <span class="choice-body">
-                    <strong>Solo</strong>
-                    <small>Museums, parks, easy routes.</small>
-                  </span>
-                </label>
-                <label class="choice-card">
-                  <input type="radio" name="group" value="date">
-                  <span class="choice-icon" aria-hidden="true">2</span>
-                  <span class="choice-body">
-                    <strong>Date</strong>
-                    <small>Picnic, music, night-out energy.</small>
-                  </span>
-                </label>
-                <label class="choice-card">
-                  <input type="radio" name="group" value="friends" checked>
-                  <span class="choice-icon" aria-hidden="true">3</span>
-                  <span class="choice-body">
-                    <strong>Friends</strong>
-                    <small>Low-commitment group hangs.</small>
-                  </span>
-                </label>
-                <label class="choice-card">
-                  <input type="radio" name="group" value="family">
-                  <span class="choice-icon" aria-hidden="true">4</span>
-                  <span class="choice-body">
-                    <strong>Family</strong>
-                    <small>Kid-friendly, flexible stops.</small>
-                  </span>
-                </label>
-              </div>
-            </fieldset>
-
-            <fieldset class="choice-group" data-step="budget">
-              <legend><span>2</span> Budget?</legend>
-              <div class="choice-grid thirds">
-                <label class="choice-card">
-                  <input type="radio" name="budget" value="free" checked>
-                  <span class="choice-icon" aria-hidden="true">$0</span>
-                  <span class="choice-body">
-                    <strong>Free</strong>
-                    <small>No admission first.</small>
-                  </span>
-                </label>
-                <label class="choice-card">
-                  <input type="radio" name="budget" value="under15">
-                  <span class="choice-icon" aria-hidden="true">$</span>
-                  <span class="choice-body">
-                    <strong>Under $15</strong>
-                    <small>Cheap ticket okay.</small>
-                  </span>
-                </label>
-                <label class="choice-card">
-                  <input type="radio" name="budget" value="any">
-                  <span class="choice-icon" aria-hidden="true">*</span>
-                  <span class="choice-body">
-                    <strong>Any</strong>
-                    <small>Show the best fit.</small>
-                  </span>
-                </label>
-              </div>
-            </fieldset>
-
-            <fieldset class="choice-group" data-step="vibe">
-              <legend><span>3</span> Vibe?</legend>
-              <div class="choice-grid vibes">
-                <label class="choice-pill">
-                  <input type="checkbox" name="vibe" value="music" checked>
-                  <span>Music</span>
-                </label>
-                <label class="choice-pill">
-                  <input type="checkbox" name="vibe" value="outdoors">
-                  <span>Outdoors</span>
-                </label>
-                <label class="choice-pill">
-                  <input type="checkbox" name="vibe" value="arts">
-                  <span>Arts</span>
-                </label>
-                <label class="choice-pill">
-                  <input type="checkbox" name="vibe" value="food">
-                  <span>Food</span>
-                </label>
-                <label class="choice-pill">
-                  <input type="checkbox" name="vibe" value="movies">
-                  <span>Movies</span>
-                </label>
-                <label class="choice-pill">
-                  <input type="checkbox" name="vibe" value="sports">
-                  <span>Sports</span>
-                </label>
-                <label class="choice-pill">
-                  <input type="checkbox" name="vibe" value="community">
-                  <span>Community</span>
-                </label>
-                <label class="choice-pill">
-                  <input type="checkbox" name="vibe" value="museums">
-                  <span>Museums</span>
-                </label>
-              </div>
-            </fieldset>
-
-            <fieldset class="choice-group" data-step="area">
-              <legend><span>4</span> Area?</legend>
-              <div class="choice-grid areas">
-                <label class="choice-card">
-                  <input type="radio" name="area" value="downtown">
-                  <span class="choice-icon" aria-hidden="true">DT</span>
-                  <span class="choice-body">
-                    <strong>Downtown</strong>
-                    <small>Arch, stadiums, riverfront.</small>
-                  </span>
-                </label>
-                <label class="choice-card">
-                  <input type="radio" name="area" value="forest-park">
-                  <span class="choice-icon" aria-hidden="true">FP</span>
-                  <span class="choice-body">
-                    <strong>Forest Park</strong>
-                    <small>Museums, Muny, lawn nights.</small>
-                  </span>
-                </label>
-                <label class="choice-card">
-                  <input type="radio" name="area" value="south-city">
-                  <span class="choice-icon" aria-hidden="true">SC</span>
-                  <span class="choice-body">
-                    <strong>Tower Grove/South City</strong>
-                    <small>Markets, gardens, library stops.</small>
-                  </span>
-                </label>
-                <label class="choice-card">
-                  <input type="radio" name="area" value="grand-center">
-                  <span class="choice-icon" aria-hidden="true">GC</span>
-                  <span class="choice-body">
-                    <strong>Grand Center</strong>
-                    <small>Galleries and arts district nights.</small>
-                  </span>
-                </label>
-                <label class="choice-card">
-                  <input type="radio" name="area" value="any" checked>
-                  <span class="choice-icon" aria-hidden="true">ALL</span>
-                  <span class="choice-body">
-                    <strong>Any</strong>
-                    <small>Use the whole backyard.</small>
-                  </span>
-                </label>
-              </div>
-            </fieldset>
-          </form>
-
-          <aside class="plan-panel" id="plan-results" aria-labelledby="plan-title" aria-live="polite">
-            <div class="plan-panel-top">
-              <p class="eyebrow">Your STL plan</p>
-              <span class="status-badge" id="plan-chip">Ready</span>
-            </div>
-            <h3 id="plan-title">Three picks for right now</h3>
-            <p class="plan-summary" id="plan-summary"></p>
-            <div class="plan-picks" id="plan-picks"></div>
-            <div class="plan-actions">
-              <button class="button primary" type="button" id="apply-plan">Apply filters</button>
-              <button class="button secondary" type="button" id="share-plan">Copy/share text</button>
-              <button class="button ghost" type="button" id="reset-plan">Reset</button>
-            </div>
-            <p class="share-status" id="share-status" role="status" aria-live="polite"></p>
-          </aside>
+        <div class="planner-preview" aria-label="Planner overview">
+          <article>
+            <span class="preview-number">1</span>
+            <h3>Set the basics</h3>
+            <p>Solo museum stop, family park day, friends after work, or a date night.</p>
+          </article>
+          <article>
+            <span class="preview-number">2</span>
+            <h3>Keep it affordable</h3>
+            <p>Free-first and under-$15 filters stay close to the source-linked data.</p>
+          </article>
+          <article>
+            <span class="preview-number">3</span>
+            <h3>Land on the list</h3>
+            <p>Apply the plan and jump straight into matching STL events.</p>
+          </article>
         </div>
       </section>
 
@@ -343,7 +176,7 @@
         </div>
       </section>
 
-      <section class="results-section" aria-labelledby="results-title">
+      <section class="results-section" id="results" aria-labelledby="results-title">
         <div class="results-bar">
           <div>
             <p class="eyebrow">Live list</p>
@@ -420,6 +253,233 @@
         >Submit by email</a>
       </section>
     </main>
+
+    <div class="onboarding-modal" id="planner-modal" hidden>
+      <div class="onboarding-scrim" data-close-planner aria-hidden="true"></div>
+      <section
+        class="onboarding-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="planner-modal-title"
+        aria-describedby="planner-modal-desc"
+      >
+        <header class="modal-header">
+          <div>
+            <p class="modal-kicker" id="planner-step-label">Step 1 of 5</p>
+            <h2 id="planner-modal-title">Build your STL plan</h2>
+            <p id="planner-modal-desc">
+              A compact civic chooser for the riverfront, brick blocks, parks, and neighborhood nights.
+            </p>
+          </div>
+          <button class="modal-close" type="button" id="close-planner" aria-label="Skip planner and close">
+            Skip
+          </button>
+        </header>
+
+        <ol class="stepper modal-stepper" aria-label="Preference steps">
+          <li data-step-indicator="group">
+            <span>1</span>
+            <strong>Group</strong>
+          </li>
+          <li data-step-indicator="budget">
+            <span>2</span>
+            <strong>Budget</strong>
+          </li>
+          <li data-step-indicator="vibe">
+            <span>3</span>
+            <strong>Vibe</strong>
+          </li>
+          <li data-step-indicator="area">
+            <span>4</span>
+            <strong>Area</strong>
+          </li>
+          <li data-step-indicator="results">
+            <span>5</span>
+            <strong>Results</strong>
+          </li>
+        </ol>
+
+        <div class="modal-body">
+          <form class="planner-form" id="planner-form" aria-label="Build your STL plan">
+            <fieldset class="choice-group onboarding-step" data-step="group">
+              <legend><span>1</span> Who are you going with?</legend>
+              <div class="choice-grid compact">
+                <label class="choice-card">
+                  <input type="radio" name="group" value="solo">
+                  <span class="choice-icon" aria-hidden="true">1</span>
+                  <span class="choice-body">
+                    <strong>Solo</strong>
+                    <small>Museums, parks, easy routes.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="group" value="date">
+                  <span class="choice-icon" aria-hidden="true">2</span>
+                  <span class="choice-body">
+                    <strong>Date</strong>
+                    <small>Picnic, music, night-out energy.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="group" value="friends" checked>
+                  <span class="choice-icon" aria-hidden="true">3</span>
+                  <span class="choice-body">
+                    <strong>Friends</strong>
+                    <small>Low-commitment group hangs.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="group" value="family">
+                  <span class="choice-icon" aria-hidden="true">4</span>
+                  <span class="choice-body">
+                    <strong>Family</strong>
+                    <small>Kid-friendly, flexible stops.</small>
+                  </span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="choice-group onboarding-step" data-step="budget">
+              <legend><span>2</span> Budget?</legend>
+              <div class="choice-grid thirds">
+                <label class="choice-card">
+                  <input type="radio" name="budget" value="free" checked>
+                  <span class="choice-icon" aria-hidden="true">$0</span>
+                  <span class="choice-body">
+                    <strong>Free</strong>
+                    <small>No admission first.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="budget" value="under15">
+                  <span class="choice-icon" aria-hidden="true">$</span>
+                  <span class="choice-body">
+                    <strong>Under $15</strong>
+                    <small>Cheap ticket okay.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="budget" value="any">
+                  <span class="choice-icon" aria-hidden="true">*</span>
+                  <span class="choice-body">
+                    <strong>Any</strong>
+                    <small>Show the best fit.</small>
+                  </span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="choice-group onboarding-step" data-step="vibe">
+              <legend><span>3</span> Vibe?</legend>
+              <div class="choice-grid vibes">
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="music" checked>
+                  <span>Music</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="outdoors">
+                  <span>Outdoors</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="arts">
+                  <span>Arts</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="food">
+                  <span>Food</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="movies">
+                  <span>Movies</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="sports">
+                  <span>Sports</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="community">
+                  <span>Community</span>
+                </label>
+                <label class="choice-pill">
+                  <input type="checkbox" name="vibe" value="museums">
+                  <span>Museums</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="choice-group onboarding-step" data-step="area">
+              <legend><span>4</span> Area?</legend>
+              <div class="choice-grid areas">
+                <label class="choice-card">
+                  <input type="radio" name="area" value="downtown">
+                  <span class="choice-icon" aria-hidden="true">DT</span>
+                  <span class="choice-body">
+                    <strong>Downtown</strong>
+                    <small>Arch, stadiums, riverfront.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="area" value="forest-park">
+                  <span class="choice-icon" aria-hidden="true">FP</span>
+                  <span class="choice-body">
+                    <strong>Forest Park</strong>
+                    <small>Museums, Muny, lawn nights.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="area" value="south-city">
+                  <span class="choice-icon" aria-hidden="true">SC</span>
+                  <span class="choice-body">
+                    <strong>Tower Grove/South City</strong>
+                    <small>Markets, gardens, library stops.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="area" value="grand-center">
+                  <span class="choice-icon" aria-hidden="true">GC</span>
+                  <span class="choice-body">
+                    <strong>Grand Center</strong>
+                    <small>Galleries and arts district nights.</small>
+                  </span>
+                </label>
+                <label class="choice-card">
+                  <input type="radio" name="area" value="any" checked>
+                  <span class="choice-icon" aria-hidden="true">ALL</span>
+                  <span class="choice-body">
+                    <strong>Any</strong>
+                    <small>Use the whole backyard.</small>
+                  </span>
+                </label>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="plan-panel onboarding-step" id="plan-results" data-step="results" aria-labelledby="plan-title" aria-live="polite">
+            <div class="plan-panel-top">
+              <p class="eyebrow">Your STL plan</p>
+              <span class="status-badge" id="plan-chip">Ready</span>
+            </div>
+            <h3 id="plan-title">Three picks for right now</h3>
+            <p class="plan-summary" id="plan-summary"></p>
+            <div class="plan-picks" id="plan-picks"></div>
+            <div class="plan-actions">
+              <button class="button secondary" type="button" id="share-plan">Copy/share text</button>
+              <button class="button ghost" type="button" id="reset-plan">Reset</button>
+            </div>
+            <p class="share-status" id="share-status" role="status" aria-live="polite"></p>
+          </aside>
+        </div>
+
+        <footer class="modal-footer">
+          <button class="button ghost" type="button" id="planner-back">Back</button>
+          <div class="modal-progress" aria-hidden="true">
+            <span id="planner-progress-bar"></span>
+          </div>
+          <button class="button primary" type="button" id="planner-next">Next</button>
+          <button class="button primary" type="button" id="apply-plan" hidden>Apply plan</button>
+        </footer>
+      </section>
+    </div>
 
     <a class="sticky-plan-cta" href="#plan" data-open-planner>Build your STL plan</a>
 

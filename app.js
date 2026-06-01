@@ -6,7 +6,14 @@ const DEFAULT_PLAN = {
 };
 
 const PLAN_STORAGE_KEY = "stl-backyard-plan";
-const ONBOARDING_SEEN_KEY = "stl-backyard-onboarding-seen";
+const plannerSteps = ["group", "budget", "vibe", "area", "results"];
+const plannerStepLabels = {
+  group: "Step 1 of 5",
+  budget: "Step 2 of 5",
+  vibe: "Step 3 of 5",
+  area: "Step 4 of 5",
+  results: "Step 5 of 5"
+};
 
 const state = {
   events: [],
@@ -14,11 +21,18 @@ const state = {
   selectedTags: new Set(),
   activeNeighborhood: "all",
   activePlanFilter: null,
-  planPicks: []
+  planPicks: [],
+  currentPlannerStep: 0,
+  plannerReturnFocus: null
 };
 
 const els = {
+  plannerModal: document.querySelector("#planner-modal"),
   plannerForm: document.querySelector("#planner-form"),
+  plannerBack: document.querySelector("#planner-back"),
+  plannerNext: document.querySelector("#planner-next"),
+  plannerProgressBar: document.querySelector("#planner-progress-bar"),
+  plannerStepLabel: document.querySelector("#planner-step-label"),
   planChip: document.querySelector("#plan-chip"),
   planSummary: document.querySelector("#plan-summary"),
   planPicks: document.querySelector("#plan-picks"),
@@ -164,8 +178,8 @@ async function init() {
     loadSavedPlan();
     bindEvents();
     updatePlan();
+    renderPlannerStep();
     applyFilters();
-    maybeOpenOnboarding();
   } catch (error) {
     els.resultCount.textContent = "Could not load event data.";
     els.emptyState.hidden = false;
@@ -246,17 +260,32 @@ function bindEvents() {
   els.sharePlan.addEventListener("click", shareCurrentPlan);
   els.resetPlan.addEventListener("click", resetPlanner);
   els.closePlanner.addEventListener("click", closeOnboardingModal);
+  els.plannerBack.addEventListener("click", () => setPlannerStep(state.currentPlannerStep - 1));
+  els.plannerNext.addEventListener("click", () => setPlannerStep(state.currentPlannerStep + 1));
+
+  els.plannerModal.addEventListener("click", (event) => {
+    if (event.target.matches("[data-close-planner]")) {
+      closeOnboardingModal();
+    }
+  });
 
   els.openPlannerLinks.forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
-      openOnboardingModal();
+      openOnboardingModal(event.currentTarget);
     });
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && document.body.classList.contains("onboarding-open")) {
+    if (!document.body.classList.contains("onboarding-open")) return;
+
+    if (event.key === "Escape") {
       closeOnboardingModal();
+      return;
+    }
+
+    if (event.key === "Tab") {
+      trapPlannerFocus(event);
     }
   });
 
@@ -298,27 +327,91 @@ function bindEvents() {
   document.addEventListener("click", (event) => {
     const mini = event.target.closest("[data-focus-event]");
     if (!mini) return;
+    if (document.body.classList.contains("onboarding-open")) {
+      closeOnboardingModal();
+    }
     focusEvent(mini.dataset.focusEvent);
   });
 }
 
-function maybeOpenOnboarding() {
-  if (localStorage.getItem(ONBOARDING_SEEN_KEY) === "1") return;
-  openOnboardingModal({ markSeen: false });
-}
-
-function openOnboardingModal({ markSeen = false } = {}) {
+function openOnboardingModal(trigger) {
+  state.plannerReturnFocus = trigger || document.activeElement;
+  setPlannerStep(0, { focus: false });
+  els.plannerModal.hidden = false;
   document.body.classList.add("onboarding-open");
-  if (markSeen) localStorage.setItem(ONBOARDING_SEEN_KEY, "1");
-  window.setTimeout(() => {
-    const checked = els.plannerForm.querySelector("input:checked");
-    checked?.focus({ preventScroll: true });
-  }, 40);
+  window.setTimeout(focusCurrentPlannerStep, 40);
 }
 
 function closeOnboardingModal() {
   document.body.classList.remove("onboarding-open");
-  localStorage.setItem(ONBOARDING_SEEN_KEY, "1");
+  els.plannerModal.hidden = true;
+  state.plannerReturnFocus?.focus?.({ preventScroll: true });
+  state.plannerReturnFocus = null;
+}
+
+function setPlannerStep(stepIndex, { focus = true } = {}) {
+  state.currentPlannerStep = Math.max(0, Math.min(stepIndex, plannerSteps.length - 1));
+  renderPlannerStep();
+  if (focus && document.body.classList.contains("onboarding-open")) {
+    window.setTimeout(focusCurrentPlannerStep, 20);
+  }
+}
+
+function renderPlannerStep() {
+  const activeStep = plannerSteps[state.currentPlannerStep];
+
+  document.querySelectorAll(".onboarding-step").forEach((panel) => {
+    panel.classList.toggle("is-active", panel.dataset.step === activeStep);
+  });
+
+  updateStepper();
+  updatePlannerControls();
+}
+
+function updatePlannerControls() {
+  const activeStep = plannerSteps[state.currentPlannerStep];
+  const isResultsStep = activeStep === "results";
+
+  els.plannerBack.disabled = state.currentPlannerStep === 0;
+  els.plannerNext.hidden = isResultsStep;
+  els.applyPlan.hidden = !isResultsStep;
+  els.plannerNext.textContent = activeStep === "area" ? "See picks" : "Next";
+  els.plannerStepLabel.textContent = plannerStepLabels[activeStep];
+  els.plannerProgressBar.style.width = `${((state.currentPlannerStep + 1) / plannerSteps.length) * 100}%`;
+}
+
+function focusCurrentPlannerStep() {
+  const activeStep = plannerSteps[state.currentPlannerStep];
+  const activePanel = document.querySelector(".onboarding-step.is-active");
+  const target =
+    activeStep === "results" ? els.applyPlan :
+    activePanel?.querySelector("input:checked, input, button, a") ||
+    (els.applyPlan.hidden ? els.plannerNext : els.applyPlan);
+  target?.focus({ preventScroll: true });
+}
+
+function trapPlannerFocus(event) {
+  const focusable = getPlannerFocusableElements();
+  if (focusable.length === 0) return;
+
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+    return;
+  }
+
+  if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+function getPlannerFocusableElements() {
+  return [...els.plannerModal.querySelectorAll("a[href], button, input, select, textarea, [tabindex]:not([tabindex='-1'])")]
+    .filter((element) => !element.disabled && !element.hidden && element.offsetParent !== null);
 }
 
 function loadSavedPlan() {
@@ -374,19 +467,11 @@ function updateChoiceStates() {
 }
 
 function updateStepper() {
-  const preferences = getPlanPreferences();
-  const completed = {
-    group: Boolean(preferences.group),
-    budget: Boolean(preferences.budget),
-    vibe: preferences.vibes.length > 0,
-    area: Boolean(preferences.area)
-  };
-  const activeStep = Object.keys(completed).find((step) => !completed[step]) || "area";
-
   document.querySelectorAll("[data-step-indicator]").forEach((step) => {
     const key = step.dataset.stepIndicator;
-    step.classList.toggle("is-complete", completed[key]);
-    step.classList.toggle("is-active", key === activeStep);
+    const index = plannerSteps.indexOf(key);
+    step.classList.toggle("is-complete", index >= 0 && index < state.currentPlannerStep);
+    step.classList.toggle("is-active", index === state.currentPlannerStep);
   });
 }
 
@@ -534,7 +619,7 @@ function applyPlanToFilters() {
   });
 
   applyFilters();
-  document.querySelector("#events").scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelector("#results").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function clonePlanPreferences(preferences) {
@@ -596,7 +681,7 @@ function resetPlanner() {
   els.plannerForm.reset();
   state.activePlanFilter = null;
   localStorage.removeItem(PLAN_STORAGE_KEY);
-  localStorage.removeItem(ONBOARDING_SEEN_KEY);
+  setPlannerStep(0, { focus: document.body.classList.contains("onboarding-open") });
   clearShareStatus();
   updatePlan();
   applyFilters();
